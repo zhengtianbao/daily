@@ -1,0 +1,10 @@
+.vscode
+.expo/**
+ios/**
+android/**
+assets/**
+node_modules/**
+.prettirrc
+.eslintrc.js
+package.json
+
