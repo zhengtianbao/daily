@@ -1,20 +1,18 @@
-import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
+import { Colors } from '@/app/constants/colors';
 import { Stack } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+const customDarkTheme = { ...MD3DarkTheme, colors: Colors.dark };
+const customLightTheme = { ...MD3LightTheme, colors: Colors.light };
+
 const App = () => {
   const colorScheme = useColorScheme();
-  const { theme } = useMaterial3Theme();
-
-  const paperTheme =
-    colorScheme === 'dark'
-      ? { ...MD3DarkTheme, colors: theme.dark }
-      : { ...MD3LightTheme, colors: theme.light };
+  const customTheme = colorScheme === 'dark' ? customDarkTheme : customLightTheme;
 
   return (
-    <PaperProvider theme={paperTheme}>
+    <PaperProvider theme={customTheme}>
       <SafeAreaProvider>
         <RootNavigation />
       </SafeAreaProvider>

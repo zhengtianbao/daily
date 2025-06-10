@@ -1,27 +1,62 @@
-import { Text } from 'react-native-paper';
+import library from '@/assets/data/library.json';
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Button, Modal, Portal, Text } from 'react-native-paper';
 
 export default function Index() {
+  const [libraryIndex, setLibraryIndex] = useState(0);
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  const hideModal = () => setShowModal(false);
+  const randomLibrary = () => {
+    setLibraryIndex(Math.floor(Math.random() * library.length));
+  };
+
+  useEffect(() => {
+    randomLibrary();
+  }, []);
+
   return (
     <>
-      <Text variant="displayLarge">Display Large</Text>
-      <Text variant="displayMedium">Display Medium</Text>
-      <Text variant="displaySmall">Display small</Text>
-
-      <Text variant="headlineLarge">Headline Large</Text>
-      <Text variant="headlineMedium">Headline Medium</Text>
-      <Text variant="headlineSmall">Headline Small</Text>
-
-      <Text variant="titleLarge">Title Large</Text>
-      <Text variant="titleMedium">Title Medium</Text>
-      <Text variant="titleSmall">Title Small</Text>
-
-      <Text variant="bodyLarge">Body Large</Text>
-      <Text variant="bodyMedium">Body Medium</Text>
-      <Text variant="bodySmall">Body Small</Text>
-
-      <Text variant="labelLarge">Label Large</Text>
-      <Text variant="labelMedium">Label Medium</Text>
-      <Text variant="labelSmall">Label Small</Text>
+      <Portal>
+        <Modal
+          visible={showModal}
+          onDismiss={hideModal}
+          contentContainerStyle={styles.modalContainer}>
+          <Pressable onPress={() => setShowTranslation(true)}>
+            <Text variant="bodyLarge">{library[libraryIndex].en}</Text>
+          </Pressable>
+          {showTranslation && <Text variant="bodyLarge">{library[libraryIndex].cn}</Text>}
+          <View style={styles.buttonRow}>
+            <Button onPress={() => setShowTranslation(true)}>translate</Button>
+            <Button
+              onPress={() => {
+                randomLibrary();
+                setShowTranslation(false);
+              }}>
+              next
+            </Button>
+            <Button onPress={hideModal}>got it</Button>
+          </View>
+        </Modal>
+      </Portal>
+      <Button onPress={() => setShowModal(true)}>
+        <Text variant="displayLarge">pick</Text>
+      </Button>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  modalContainer: {
+    justifyContent: 'center',
+    padding: 10,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    margin: 10,
+  },
+});
