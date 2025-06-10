@@ -1,9 +1,12 @@
+import { View } from 'react-native';
+import { Text } from 'react-native-paper';
+
 import library from '@/assets/data/library.json';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { Button, Modal, Portal, Text } from 'react-native-paper';
+import { Pressable, StyleSheet } from 'react-native';
+import { Button, Modal, Portal } from 'react-native-paper';
 
-export default function Index() {
+const SentencesScreen = () => {
   const [libraryIndex, setLibraryIndex] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -46,7 +49,7 @@ export default function Index() {
       </Button>
     </>
   );
-}
+};
 
 const styles = StyleSheet.create({
   modalContainer: {
@@ -60,3 +63,5 @@ const styles = StyleSheet.create({
     margin: 10,
   },
 });
+
+export default SentencesScreen;

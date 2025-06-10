@@ -1,4 +1,5 @@
-import { Colors } from '@/app/constants/colors';
+import { Colors } from '@/constants/colors';
+import { ReaderProvider } from '@epubjs-react-native/core';
 import { Stack } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
@@ -14,7 +15,9 @@ const App = () => {
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaProvider>
-        <RootNavigation />
+        <ReaderProvider>
+          <RootNavigation />
+        </ReaderProvider>
       </SafeAreaProvider>
     </PaperProvider>
   );
@@ -23,7 +26,7 @@ const App = () => {
 const RootNavigation = () => {
   return (
     <Stack>
-      <Stack.Screen name="index" />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );
 };
