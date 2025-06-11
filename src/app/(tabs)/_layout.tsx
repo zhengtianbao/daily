@@ -7,8 +7,6 @@ const TabsNavigation = () => {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: 'tomato',
-          tabBarInactiveTintColor: 'gray',
         }}>
         <Tabs.Screen
           name="(sentences)"
