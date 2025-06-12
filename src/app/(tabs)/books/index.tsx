@@ -1,17 +1,18 @@
-import { Reader, ReaderProvider } from '@epubjs-react-native/core';
+import { Reader, ReaderProvider, useReader } from '@epubjs-react-native/core';
 import { useFileSystem } from '@epubjs-react-native/expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import * as React from 'react';
 import {
   Alert,
+  GestureResponderEvent,
   SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   useWindowDimensions,
   View,
 } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const base64 = '';
@@ -23,6 +24,22 @@ const Books = () => {
   const insets = useSafeAreaInsets();
 
   const [src, setSrc] = React.useState(opf);
+
+  const { goPrevious, goNext } = useReader();
+
+  const handlePress = (event: GestureResponderEvent) => {
+    const { locationX } = event.nativeEvent;
+    const screenWidth = width;
+
+    const leftThreshold = screenWidth * 0.3;
+    const rightThreshold = screenWidth * 0.7;
+
+    if (locationX < leftThreshold) {
+      goPrevious();
+    } else if (locationX > rightThreshold) {
+      goNext();
+    }
+  };
   return (
     <SafeAreaView
       style={{
@@ -69,8 +86,8 @@ const Books = () => {
         </TouchableOpacity>
       </View>
 
-      <ReaderProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
+      <TouchableWithoutFeedback onPress={handlePress}>
+        <View>
           <Reader
             src={src}
             width={width}
@@ -94,8 +111,8 @@ const Books = () => {
               },
             ]}
           />
-        </GestureHandlerRootView>
-      </ReaderProvider>
+        </View>
+      </TouchableWithoutFeedback>
 
       {src === opf && <Text style={styles.currentFormat}>Current format: .opf</Text>}
 
@@ -128,4 +145,12 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Books;
+const BookReader = () => {
+  return (
+    <ReaderProvider>
+      <Books />
+    </ReaderProvider>
+  );
+};
+
+export default BookReader;
