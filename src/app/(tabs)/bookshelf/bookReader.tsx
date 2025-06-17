@@ -1,7 +1,7 @@
-import { Reader } from '@epubjs-react-native/core';
+import { Reader, useReader } from '@epubjs-react-native/core';
 import { useFileSystem } from '@epubjs-react-native/expo-file-system';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SafeAreaView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import {
   GestureHandlerRootView,
@@ -18,6 +18,45 @@ const BookReader = () => {
   const navigation = useNavigation();
 
   const { bookUri, bookTitle } = useLocalSearchParams();
+
+  const { changeFontSize, changeTheme, theme } = useReader();
+
+  const defaultTheme = theme;
+  const disableTextSelectionTimeout = useRef<NodeJS.Timeout>();
+
+  const disableTextSelectionTemporarily = () => {
+    if (disableTextSelectionTimeout.current) {
+      clearTimeout(disableTextSelectionTimeout.current);
+    }
+
+    changeTheme({
+      ...defaultTheme,
+      body: {
+        ...defaultTheme.body,
+        '-webkit-touch-callout': 'none' /* iOS Safari */,
+        '-webkit-user-select': 'none' /* Safari */,
+        '-khtml-user-select': 'none' /* Konqueror HTML */,
+        '-moz-user-select': 'none' /* Firefox */,
+        '-ms-user-select': 'none' /* Internet Explorer/Edge */,
+        'user-select': 'none',
+      },
+    });
+
+    disableTextSelectionTimeout.current = setTimeout(() => {
+      changeTheme({
+        ...defaultTheme,
+        body: {
+          ...defaultTheme.body,
+          '-webkit-touch-callout': 'auto' /* iOS Safari */,
+          '-webkit-user-select': 'auto' /* Safari */,
+          '-khtml-user-select': 'auto' /* Konqueror HTML */,
+          '-moz-user-select': 'auto' /* Firefox */,
+          '-ms-user-select': 'auto' /* Internet Explorer/Edge */,
+          'user-select': 'auto',
+        },
+      });
+    }, 1000);
+  };
 
   // Hide bottom tab bar when component mounts, restore when unmounts
   useEffect(() => {
@@ -43,9 +82,9 @@ const BookReader = () => {
   //   https://docs.swmansion.com/react-native-gesture-handler/docs/gesture-handlers/about-handlers
   // Handle swipe-down gesture
   const onGestureEvent = ({ nativeEvent }: PanGestureHandlerGestureEvent) => {
-    if (nativeEvent.translationY > 50) {
+    if (nativeEvent.translationY > 100) {
       setAppBarVisible(true);
-    } else if (nativeEvent.translationY < -50) {
+    } else if (nativeEvent.translationY < -100) {
       setAppBarVisible(false);
     }
   };
@@ -77,7 +116,12 @@ const BookReader = () => {
               width={width - insets.left - insets.right}
               height={height - (appBarVisible ? insets.top + 56 : 0)}
               fileSystem={useFileSystem}
+              enableSelection={true}
+              enableSwipe={true}
+              onSwipeLeft={disableTextSelectionTemporarily}
+              onSwipeRight={disableTextSelectionTemporarily}
               onSelected={() => console.log('selected')}
+              onReady={() => changeFontSize(`20px`)}
               menuItems={[
                 {
                   label: '🟡',
