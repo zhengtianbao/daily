@@ -1,5 +1,8 @@
 import { Colors } from '@/constants/colors';
+import { database } from '@/store/database';
+import { ReaderProvider } from '@epubjs-react-native/core';
 import { Stack } from 'expo-router';
+import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -10,13 +13,25 @@ const customLightTheme = { ...MD3LightTheme, colors: Colors.light };
 const App = () => {
   const colorScheme = useColorScheme();
   const customTheme = colorScheme === 'dark' ? customDarkTheme : customLightTheme;
+  useEffect(() => {
+    const initializeDatabase = async () => {
+      try {
+        await database.initialize();
+      } catch (error) {
+        console.error('Error initializing database:', error);
+      }
+    };
+    initializeDatabase();
+  }, []);
 
   return (
-    <PaperProvider theme={customTheme}>
-      <SafeAreaProvider>
-        <RootNavigation />
-      </SafeAreaProvider>
-    </PaperProvider>
+    <ReaderProvider>
+      <PaperProvider theme={customTheme}>
+        <SafeAreaProvider>
+          <RootNavigation />
+        </SafeAreaProvider>
+      </PaperProvider>
+    </ReaderProvider>
   );
 };
 

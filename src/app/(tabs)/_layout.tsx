@@ -16,9 +16,9 @@ const TabsNavigation = () => {
           }}
         />
         <Tabs.Screen
-          name="books"
+          name="bookshelf"
           options={{
-            title: 'Books',
+            title: 'bookshelf',
             tabBarIcon: ({ color }) => <FontAwesome name="book" size={20} color={color} />,
           }}
         />
