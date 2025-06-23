@@ -1,3 +1,4 @@
+import Reverso from '@/components/translate/reverso';
 import { Reader, useReader } from '@epubjs-react-native/core';
 import { useFileSystem } from '@epubjs-react-native/expo-file-system';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
@@ -16,7 +17,7 @@ const BookReader = () => {
   const [appBarVisible, setAppBarVisible] = useState(false); // Default to hidden
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-
+  let reverso = new Reverso();
   const { bookUri, bookTitle } = useLocalSearchParams();
 
   const { changeFontSize, changeTheme, theme } = useReader();
@@ -89,6 +90,28 @@ const BookReader = () => {
     }
   };
 
+  const onSelected = async (selection: string, cfiRange: string) => {
+    console.log('selected', selection);
+
+    try {
+      const translationsNew = await reverso.getContextFromWebPage(selection, 'english', 'chinese');
+
+      if (translationsNew.Translations.length === 0) {
+        // let translation = await reverso.getTranslationFromAPI(selection, 'english', 'chinese');
+        // setPanelContent(translation);
+      } else {
+        // translationsNew.Book = bookTitle;
+        // translationsNew.TextView = latestSentence.current;
+        // setPanelContent(translationsNew);
+      }
+      console.log('translationsNew', translationsNew);
+      // setIsPanelVisible(true);
+    } catch (error) {
+      console.error('Error fetching translation:', error);
+      // setIsPanelVisible(false);
+    }
+  };
+
   return (
     <GestureHandlerRootView>
       <SafeAreaView
@@ -120,7 +143,7 @@ const BookReader = () => {
               enableSwipe={true}
               onSwipeLeft={disableTextSelectionTemporarily}
               onSwipeRight={disableTextSelectionTemporarily}
-              onSelected={() => console.log('selected')}
+              onSelected={onSelected}
               onReady={() => changeFontSize(`20px`)}
               menuItems={[
                 {
