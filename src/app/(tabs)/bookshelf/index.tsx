@@ -8,19 +8,10 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import { router } from 'expo-router';
 
-import { DOMParser } from '@xmldom/xmldom';
-import JSZip from 'jszip';
-
 import { Book, database } from '@/db/database';
+import { getEpubMetadataFromFile } from '@/helpers/epub';
 
 const BookPlaceholderImage = require('@/assets/images/cover-default-book.png');
-
-interface BookInfo {
-  title: string;
-  author: string;
-  uri: string;
-  cover: string | null;
-}
 
 const Bookshelf = () => {
   const [searchVisible, setSearchVisible] = useState(false);
@@ -50,85 +41,6 @@ const Bookshelf = () => {
     setToastMessage(message);
   };
 
-  const getBookInfoFromEpubFile = async (uri: string) => {
-    let bookInfo: BookInfo = {
-      title: '',
-      author: '',
-      uri: uri,
-      cover: null,
-    };
-
-    const file = await FileSystem.readAsStringAsync(uri, {
-      encoding: 'base64',
-    });
-    const zip = await JSZip.loadAsync(file, { base64: true });
-    const containerXml = await zip.file('META-INF/container.xml')?.async('string');
-    if (!containerXml) {
-      console.log('container.xml not found');
-      return bookInfo;
-    }
-    const containerDoc = new DOMParser().parseFromString(containerXml, 'application/xml');
-    const rootfilePath = containerDoc.getElementsByTagName('rootfile')[0].getAttribute('full-path');
-    const opfXml = await zip.file(rootfilePath!)?.async('string');
-    if (!opfXml) {
-      console.log('OPF file not found');
-      return bookInfo;
-    }
-    const opfDoc = new DOMParser().parseFromString(opfXml, 'application/xml');
-
-    const title = opfDoc.getElementsByTagName('dc:title')[0].textContent || '';
-    if (title) {
-      bookInfo.title = title;
-    }
-    const author = opfDoc.getElementsByTagName('dc:creator')[0].textContent || '';
-    bookInfo.author = author;
-
-    const metaElements = opfDoc.getElementsByTagName('meta');
-    let coverId: string | null = null;
-    for (let i = 0; i < metaElements.length; i++) {
-      const meta = metaElements[i];
-      if (meta.getAttribute('name') === 'cover') {
-        coverId = meta.getAttribute('content');
-        break;
-      }
-    }
-
-    if (!coverId) {
-      console.log('Cover ID not found');
-      return bookInfo;
-    }
-
-    const itemElements = opfDoc.getElementsByTagName('item');
-    let coverHref: string | null = null;
-    let mediaType: string | null = null;
-
-    for (let i = 0; i < itemElements.length; i++) {
-      const item = itemElements[i];
-      if (item.getAttribute('id') === coverId) {
-        coverHref = item.getAttribute('href');
-        mediaType = item.getAttribute('media-type');
-        break;
-      }
-    }
-
-    if (!coverHref || !mediaType) {
-      console.log('Cover image href or media type not found');
-      return bookInfo;
-    }
-
-    const opfBasePath = rootfilePath!.substring(0, rootfilePath!.lastIndexOf('/') + 1);
-    const coverPath = opfBasePath + coverHref;
-
-    const imageBlob = await zip.file(coverPath)?.async('base64');
-
-    if (!imageBlob) {
-      console.log('Cover image not found in zip');
-      return bookInfo;
-    }
-    bookInfo.cover = `data:${mediaType};base64,${imageBlob}`;
-    return bookInfo;
-  };
-
   const importBook = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -137,21 +49,19 @@ const Bookshelf = () => {
       });
 
       if (!result.canceled) {
-        const book = await getBookInfoFromEpubFile(result.assets[0].uri);
-        if (book.title === '') {
-          book.title = result.assets[0].name.replace('.epub', '');
-        }
-        console.log(book.title, book.author, book.uri);
-        const id = await database.insertBook({
-          title: book.title,
-          author: book.author,
-          uri: book.uri,
-          cover: book.cover,
+        const metadata = await getEpubMetadataFromFile(result.assets[0].uri);
+        const book: Book = {
+          title: metadata.title || result.assets[0].name.replace('.epub', ''),
+          author: metadata.author || 'Unknown',
+          uri: result.assets[0].uri,
+          cover: metadata.cover || null,
           updateDate: new Date(),
           lastreadDate: new Date(),
           currentLocation: null,
           progress: 0,
-        });
+        };
+
+        const id = await database.insertBook(book);
         if (id === 0) {
           showSnackBar('Book already exists!');
           return;

@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-export interface Book {
+export type Book = {
   id?: number;
   title: string;
   author: string;
@@ -10,7 +10,7 @@ export interface Book {
   lastreadDate: Date;
   currentLocation: string | null;
   progress: number;
-}
+};
 
 export class Database {
   private db: SQLite.SQLiteDatabase | null = null;
