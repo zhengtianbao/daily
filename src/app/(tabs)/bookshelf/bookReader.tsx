@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SafeAreaView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import {
   GestureHandlerRootView,
@@ -115,6 +115,41 @@ const BookReader = () => {
     }
   };
 
+  const memoReader = useMemo(
+    () => (
+      <Reader
+        src={bookUri as string}
+        width={width - insets.left - insets.right}
+        height={height - (appBarVisible ? insets.top + 56 : 0)}
+        fileSystem={useFileSystem}
+        enableSelection={true}
+        enableSwipe={true}
+        onSwipeLeft={disableTextSelectionTemporarily}
+        onSwipeRight={disableTextSelectionTemporarily}
+        onSelected={onSelected}
+        onReady={() => changeFontSize(`20px`)}
+        menuItems={[
+          {
+            label: '🟡',
+            action: cfiRange => {
+              console.log(cfiRange);
+              return true;
+            },
+          },
+          {
+            label: '🔴',
+            action: cfiRange => {
+              console.log(cfiRange);
+              return true;
+            },
+          },
+        ]}
+      />
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   return (
     <GestureHandlerRootView>
       <SafeAreaView
@@ -137,34 +172,7 @@ const BookReader = () => {
                 />
               </Appbar.Header>
             )}
-            <Reader
-              src={bookUri as string}
-              width={width - insets.left - insets.right}
-              height={height - (appBarVisible ? insets.top + 56 : 0)}
-              fileSystem={useFileSystem}
-              enableSelection={true}
-              enableSwipe={true}
-              onSwipeLeft={disableTextSelectionTemporarily}
-              onSwipeRight={disableTextSelectionTemporarily}
-              onSelected={onSelected}
-              onReady={() => changeFontSize(`20px`)}
-              menuItems={[
-                {
-                  label: '🟡',
-                  action: cfiRange => {
-                    console.log(cfiRange);
-                    return true;
-                  },
-                },
-                {
-                  label: '🔴',
-                  action: cfiRange => {
-                    console.log(cfiRange);
-                    return true;
-                  },
-                },
-              ]}
-            />
+            {memoReader}
           </View>
         </PanGestureHandler>
       </SafeAreaView>
