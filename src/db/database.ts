@@ -5,10 +5,10 @@ export interface Book {
   title: string;
   author: string;
   uri: string;
-  cover?: string | null;
+  cover: string | null;
   updateDate: Date;
   lastreadDate: Date;
-  currentLocation?: string | null;
+  currentLocation: string | null;
   progress: number;
 }
 
@@ -79,6 +79,7 @@ export class Database {
 
   async getBookByTitle(title: string): Promise<Book | null> {
     if (!this.db) throw new Error('Database not initialized. Call initialize() first.');
+
     try {
       const query = `SELECT * FROM books WHERE title = ?`;
       const result = await this.db.getFirstAsync<any>(query, [title]);
@@ -104,6 +105,7 @@ export class Database {
 
   async getAllBooks(): Promise<Book[]> {
     if (!this.db) throw new Error('Database not initialized. Call initialize() first.');
+
     try {
       const result = await this.db.getAllAsync<any>(
         `SELECT * FROM books ORDER BY lastreadDate DESC`,
@@ -155,6 +157,7 @@ export class Database {
 
   async deleteBook(title: string): Promise<void> {
     if (!this.db) throw new Error('Database not initialized. Call initialize() first.');
+
     try {
       const book = await this.getBookByTitle(title);
       if (!book) {

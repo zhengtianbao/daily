@@ -11,7 +11,7 @@ import { router } from 'expo-router';
 import { DOMParser } from '@xmldom/xmldom';
 import JSZip from 'jszip';
 
-import { Book, database } from '@/store/database';
+import { Book, database } from '@/db/database';
 
 const BookPlaceholderImage = require('@/assets/images/cover-default-book.png');
 

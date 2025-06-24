@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { database } from '@/store/database';
+import { database } from '@/db/database';
 
 export const useDatabase = () => {
   const [isDBLoadingComplete, setIsDBLoadingComplete] = useState(false);
