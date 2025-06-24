@@ -14,14 +14,18 @@ import { getEpubMetadataFromFile } from '@/helpers/epub';
 const BookPlaceholderImage = require('@/assets/images/cover-default-book.png');
 
 const Bookshelf = () => {
-  const [searchVisible, setSearchVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [isSearchBarVisible, setIsSearchBarVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [books, setBooks] = useState<Book[]>([]);
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [isSnackbarVisible, setIsSnackbarVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+
+  const searchQueryFilteredBooks = books.filter(book =>
+    book.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     loadBooksFromDB();
@@ -37,8 +41,8 @@ const Bookshelf = () => {
   };
 
   const showSnackBar = (message: string) => {
-    setSnackbarVisible(true);
     setToastMessage(message);
+    setIsSnackbarVisible(true);
   };
 
   const importBook = async () => {
@@ -73,7 +77,7 @@ const Bookshelf = () => {
       console.error('Error importing book:', error);
       showSnackBar('Book import failed!');
     }
-    setMenuVisible(false);
+    setIsMenuVisible(false);
   };
 
   const removeBook = async (book: Book) => {
@@ -89,30 +93,29 @@ const Bookshelf = () => {
       console.error('Error removing book:', error);
       showSnackBar('Book remove failed!');
     }
-    setModalVisible(false);
+    setIsModalVisible(false);
   };
 
-  const onBookPressed = (item: Book) => {
+  const onBookItemPressed = (item: Book) => {
     router.navigate({
       pathname: '/bookshelf/bookReader',
       params: { bookUri: item.uri, bookTitle: item.title },
     });
   };
 
-  const onBookLongPressed = (item: Book) => {
-    console.log(item.title, 'long pressed');
-    setModalVisible(true);
+  const onBookItemLongPressed = (item: Book) => {
     setSelectedBook(item);
+    setIsModalVisible(true);
   };
 
   const BookItem = ({ item }: { item: Book }) => {
     return (
       <Pressable
         onPress={() => {
-          onBookPressed(item);
+          onBookItemPressed(item);
         }}
         onLongPress={() => {
-          onBookLongPressed(item);
+          onBookItemLongPressed(item);
         }}
         style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}>
         <View style={styles.bookItem}>
@@ -133,21 +136,19 @@ const Bookshelf = () => {
     );
   };
 
-  const filteredBooks = books.filter(book =>
-    book.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <SafeAreaView style={styles.container}>
       <Appbar.Header>
-        {!searchVisible ? (
+        {!isSearchBarVisible ? (
           <>
             <Appbar.Content title="Bookshelf" />
-            <Appbar.Action icon="magnify" onPress={() => setSearchVisible(true)} />
+            <Appbar.Action icon="magnify" onPress={() => setIsSearchBarVisible(true)} />
             <Menu
-              visible={menuVisible}
-              onDismiss={() => setMenuVisible(false)}
-              anchor={<Appbar.Action icon="dots-vertical" onPress={() => setMenuVisible(true)} />}>
+              visible={isMenuVisible}
+              onDismiss={() => setIsMenuVisible(false)}
+              anchor={
+                <Appbar.Action icon="dots-vertical" onPress={() => setIsMenuVisible(true)} />
+              }>
               <Menu.Item onPress={importBook} title="Import book" />
             </Menu>
           </>
@@ -160,7 +161,7 @@ const Bookshelf = () => {
             }}
             onClearIconPress={() => {
               setSearchQuery('');
-              setSearchVisible(!searchVisible);
+              setIsSearchBarVisible(false);
             }}
           />
         )}
@@ -169,7 +170,7 @@ const Bookshelf = () => {
       <View style={styles.body}>
         <FlatGrid
           itemDimension={120}
-          data={filteredBooks}
+          data={searchQueryFilteredBooks}
           style={styles.gridView}
           spacing={5}
           fixed
@@ -178,16 +179,16 @@ const Bookshelf = () => {
       </View>
 
       <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
+        visible={isSnackbarVisible}
+        onDismiss={() => setIsSnackbarVisible(false)}
         duration={1000}>
         {toastMessage}
       </Snackbar>
 
       <Portal>
         <Modal
-          visible={modalVisible}
-          onDismiss={() => setModalVisible(false)}
+          visible={isModalVisible}
+          onDismiss={() => setIsModalVisible(false)}
           contentContainerStyle={styles.modalContainerStyle}>
           <Text>{selectedBook?.title}</Text>
           <Button
