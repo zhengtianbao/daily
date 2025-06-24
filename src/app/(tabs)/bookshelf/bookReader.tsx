@@ -1,7 +1,3 @@
-import Reverso from '@/components/translate/reverso';
-import { Reader, useReader } from '@epubjs-react-native/core';
-import { useFileSystem } from '@epubjs-react-native/expo-file-system';
-import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { SafeAreaView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import {
@@ -11,6 +7,13 @@ import {
 } from 'react-native-gesture-handler';
 import { Appbar } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+
+import { Reader, useReader } from '@epubjs-react-native/core';
+import { useFileSystem } from '@epubjs-react-native/expo-file-system';
+
+import Reverso from '@/components/translate/reverso';
 
 const BookReader = () => {
   const { width, height } = useWindowDimensions();

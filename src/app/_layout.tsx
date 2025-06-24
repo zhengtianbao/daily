@@ -1,38 +1,38 @@
-import { Colors } from '@/constants/colors';
-import { database } from '@/store/database';
-import { ReaderProvider } from '@epubjs-react-native/core';
-import { Stack } from 'expo-router';
-import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+
+import { ReaderProvider } from '@epubjs-react-native/core';
+
+import { Colors } from '@/constants/colors';
+import useDatabase from '@/hooks/useDatabase';
 
 const customDarkTheme = { ...MD3DarkTheme, colors: Colors.dark };
 const customLightTheme = { ...MD3LightTheme, colors: Colors.light };
 
 const App = () => {
+  SplashScreen.preventAutoHideAsync();
+
   const colorScheme = useColorScheme();
   const customTheme = colorScheme === 'dark' ? customDarkTheme : customLightTheme;
-  useEffect(() => {
-    const initializeDatabase = async () => {
-      try {
-        await database.initialize();
-      } catch (error) {
-        console.error('Error initializing database:', error);
-      }
-    };
-    initializeDatabase();
-  }, []);
+  const isDBLoadingComplete = useDatabase();
 
-  return (
-    <ReaderProvider>
+  if (isDBLoadingComplete) {
+    SplashScreen.hideAsync();
+
+    return (
       <PaperProvider theme={customTheme}>
         <SafeAreaProvider>
-          <RootNavigation />
+          <ReaderProvider>
+            <RootNavigation />
+          </ReaderProvider>
         </SafeAreaProvider>
       </PaperProvider>
-    </ReaderProvider>
-  );
+    );
+  }
 };
 
 const RootNavigation = () => {
