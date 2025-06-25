@@ -17,7 +17,7 @@ import Reverso from '@/components/translate/reverso';
 
 const BookReader = () => {
   const { width, height } = useWindowDimensions();
-  const [appBarVisible, setAppBarVisible] = useState(false);
+  const [isAppBarVisible, setIsAppBarVisible] = useState(false);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   let reverso = new Reverso();
@@ -88,9 +88,9 @@ const BookReader = () => {
   // Handle swipe-down gesture
   const onGestureEvent = ({ nativeEvent }: PanGestureHandlerGestureEvent) => {
     if (nativeEvent.translationY > 100) {
-      setAppBarVisible(true);
+      setIsAppBarVisible(true);
     } else if (nativeEvent.translationY < -100) {
-      setAppBarVisible(false);
+      setIsAppBarVisible(false);
     }
   };
 
@@ -121,7 +121,7 @@ const BookReader = () => {
       <Reader
         src={bookUri as string}
         width={width - insets.left - insets.right}
-        height={height - insets.top - insets.bottom -(appBarVisible ? 56 : 0)}
+        height={height - insets.top - insets.bottom -(isAppBarVisible ? 64 : 0)}
         fileSystem={useFileSystem}
         enableSelection={false}
         enableSwipe={true}
@@ -158,14 +158,14 @@ const BookReader = () => {
       <SafeAreaView
         style={{
           ...styles.container,
-          paddingTop: appBarVisible ? insets.top : 0,
+          paddingTop: isAppBarVisible ? insets.top : 0,
           paddingBottom: 0,
           paddingLeft: insets.left,
           paddingRight: insets.right,
         }}>
         <PanGestureHandler onGestureEvent={onGestureEvent}>
           <View style={styles.reader}>
-            {appBarVisible && (
+            {isAppBarVisible && (
               <Appbar.Header>
                 <Appbar.Content title={bookTitle} />
                 <Appbar.BackAction
