@@ -1,35 +1,38 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { SafeAreaView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import {
   GestureHandlerRootView,
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
-import { Appbar } from 'react-native-paper';
+import { Appbar, Button, IconButton, Modal, Portal, ProgressBar, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 
-import { Reader, useReader } from '@/vendor/epubjs-react-native/src';
 import { useFileSystem } from '@epubjs-react-native/expo-file-system';
 
 import Reverso from '@/components/translate/reverso';
+import { Reader, useReader } from '@/vendor/epubjs-react-native/src';
 
 const BookReader = () => {
   const { width, height } = useWindowDimensions();
   const [isAppBarVisible, setIsAppBarVisible] = useState(false);
+  const [isSettingModalVisible, setIsSettingModalVisible] = useState(false);
+  const [selectedFont, setSelectedFont] = useState('');
+  const [fontSize, setFontSize] = useState(16);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   let reverso = new Reverso();
   const { bookUri, bookTitle } = useLocalSearchParams();
 
-  const { changeFontSize, changeTheme, theme } = useReader();
+  const { changeFontSize, changeFontFamily, changeTheme, theme } = useReader();
 
   const defaultTheme = theme;
   const disableTextSelectionTimeout = useRef<NodeJS.Timeout>();
 
   const disableTextSelectionTemporarily = () => {
-    console.log("disableTextSelectionTemporarily");
+    console.log('disableTextSelectionTemporarily');
     if (disableTextSelectionTimeout.current) {
       clearTimeout(disableTextSelectionTimeout.current);
     }
@@ -61,6 +64,33 @@ const BookReader = () => {
         },
       });
     }, 500);
+  };
+
+  const fonts = [
+    'Arial',
+    'Verdana',
+    'Tahoma',
+    'Trebuchet MS',
+    'Times New Roman',
+    'Georgia',
+    'Garamond',
+    'Courier New',
+    'Brush Script MT',
+  ];
+
+  const handleFontSelect = (fontName: string) => {
+    setSelectedFont(fontName);
+    console.log('selected font: ', fontName);
+    changeFontFamily(fontName);
+  };
+
+  const handleFontSizeChange = (delta: number) => {
+    const newSize = fontSize + delta;
+    if (newSize >= 10 && newSize <= 30) {
+      setFontSize(newSize);
+      console.log('selected font size: ', newSize);
+      changeFontSize(newSize.toString() + 'px');
+    }
   };
 
   // Hide bottom tab bar when component mounts, restore when unmounts
@@ -121,7 +151,7 @@ const BookReader = () => {
       <Reader
         src={bookUri as string}
         width={width - insets.left - insets.right}
-        height={height - insets.top - insets.bottom -(isAppBarVisible ? 64 : 0)}
+        height={height - insets.top - insets.bottom - (isAppBarVisible ? 64 : 0)}
         fileSystem={useFileSystem}
         enableSelection={false}
         enableSwipe={true}
@@ -173,11 +203,78 @@ const BookReader = () => {
                     router.navigate('/bookshelf');
                   }}
                 />
+                <Appbar.Action
+                  icon="book-settings-outline"
+                  onPress={() => setIsSettingModalVisible(true)}
+                />
               </Appbar.Header>
             )}
             {memoReader}
           </View>
         </PanGestureHandler>
+        <Portal>
+          <Modal
+            visible={isSettingModalVisible}
+            onDismiss={() => setIsSettingModalVisible(false)}
+            contentContainerStyle={styles.modal}>
+            <View style={styles.fontSelectContainer}>
+              <View style={styles.rowContainer}>
+                <Text style={styles.label}>Font: </Text>
+                <ScrollView
+                  horizontal={true}
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.scrollContainer}>
+                  {fonts.map((font, index) => (
+                    <Button
+                      key={index}
+                      mode={selectedFont === font ? 'contained' : 'outlined'}
+                      onPress={() => handleFontSelect(font)}
+                      style={styles.fontButton}>
+                      {font}
+                    </Button>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+
+            <View style={styles.fontSelectContainer}>
+              <View style={styles.rowContainer}>
+                <Text style={styles.label}>Font Size: </Text>
+                <View style={styles.progressContainer}>
+                  <IconButton
+                    icon="format-annotation-minus"
+                    size={20}
+                    mode="outlined"
+                    disabled={fontSize <= 10}
+                    onPress={() => handleFontSizeChange(-2)}
+                    style={[
+                      styles.sizeButton,
+                      fontSize <= 10 && styles.disabledButton,
+                    ]}></IconButton>
+
+                  <View style={styles.progressWrapper}>
+                    <ProgressBar
+                      progress={(fontSize - 10) / 20}
+                      color="#2196F3"
+                      style={styles.progressBar}
+                    />
+                  </View>
+
+                  <IconButton
+                    icon="format-annotation-plus"
+                    size={20}
+                    mode="outlined"
+                    disabled={fontSize >= 30}
+                    onPress={() => handleFontSizeChange(2)}
+                    style={[
+                      styles.sizeButton,
+                      fontSize >= 30 && styles.disabledButton,
+                    ]}></IconButton>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        </Portal>
       </SafeAreaView>
     </GestureHandlerRootView>
   );
@@ -189,6 +286,50 @@ const styles = StyleSheet.create({
   },
   reader: {
     flex: 1,
+  },
+  modal: {
+    backgroundColor: 'white',
+    padding: 20,
+  },
+  fontSelectContainer: {
+    padding: 10,
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  label: {
+    marginRight: 0,
+    fontSize: 16,
+    minWidth: 80,
+  },
+  scrollContainer: {
+    paddingHorizontal: 0,
+  },
+  fontButton: {
+    marginHorizontal: 5,
+    minWidth: 120,
+  },
+  progressContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  sizeButton: {
+    minWidth: 32,
+    height: 32,
+  },
+  disabledButton: {
+    opacity: 0.3,
+  },
+  progressWrapper: {
+    flex: 1,
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#E0E0E0',
   },
 });
 

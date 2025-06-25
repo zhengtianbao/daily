@@ -5,11 +5,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 
-// import { ReaderProvider } from '@epubjs-react-native/core';
-import { ReaderProvider } from '@/vendor/epubjs-react-native/src';
-
 import { Colors } from '@/constants/colors';
 import useDatabase from '@/hooks/useDatabase';
+import { ReaderProvider } from '@/vendor/epubjs-react-native/src';
 
 const customDarkTheme = { ...MD3DarkTheme, colors: Colors.dark };
 const customLightTheme = { ...MD3LightTheme, colors: Colors.light };
