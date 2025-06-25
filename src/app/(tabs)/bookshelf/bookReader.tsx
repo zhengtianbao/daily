@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
-import {
-  GestureHandlerRootView,
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
 import { Appbar, Button, IconButton, Modal, Portal, ProgressBar, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -19,12 +14,27 @@ const BookReader = () => {
   const [isAppBarVisible, setIsAppBarVisible] = useState(false);
   const [isSettingModalVisible, setIsSettingModalVisible] = useState(false);
   const [selectedFont, setSelectedFont] = useState('');
-  const [selectedFontSize, setSelectedFontSize] = useState(16);
+  const [selectedFontSize, setSelectedFontSize] = useState(20);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { bookUri, bookTitle } = useLocalSearchParams();
   const { changeFontSize, changeFontFamily, changeTheme, theme } = useReader();
+
+  // Hide bottom tab bar when component mounts, restore when unmounts
+  useEffect(() => {
+    let parent = navigation.getParent();
+    while (parent && parent.getState().type !== 'tab') {
+      parent = parent.getParent();
+    }
+
+    if (parent) {
+      parent.setOptions({ tabBarStyle: { display: 'none' } });
+      return () => {
+        parent.setOptions({ tabBarStyle: { display: 'flex' } });
+      };
+    }
+  }, [navigation]);
 
   const reverso = new Reverso();
   const defaultTheme = theme;
@@ -91,32 +101,6 @@ const BookReader = () => {
     }
   };
 
-  // Hide bottom tab bar when component mounts, restore when unmounts
-  useEffect(() => {
-    let parent = navigation.getParent();
-    while (parent && parent.getState().type !== 'tab') {
-      parent = parent.getParent();
-    }
-
-    if (parent) {
-      parent.setOptions({ tabBarStyle: { display: 'none' } });
-      return () => {
-        parent.setOptions({ tabBarStyle: { display: 'flex' } });
-      };
-    }
-  }, [navigation]);
-
-  // TODO: migrate to gestures API instead:
-  //   https://docs.swmansion.com/react-native-gesture-handler/docs/gesture-handlers/about-handlers
-  // Handle swipe-down gesture
-  const onGestureEvent = ({ nativeEvent }: PanGestureHandlerGestureEvent) => {
-    if (nativeEvent.translationY > 100) {
-      setIsAppBarVisible(true);
-    } else if (nativeEvent.translationY < -100) {
-      setIsAppBarVisible(false);
-    }
-  };
-
   const onSelected = async (selection: string, cfiRange: string) => {
     console.log('selected', selection);
 
@@ -148,12 +132,18 @@ const BookReader = () => {
         fileSystem={useFileSystem}
         enableSelection={false}
         enableSwipe={true}
-        onSwipeUp={disableTextSelectionTemporarily}
-        onSwipeDown={disableTextSelectionTemporarily}
+        onSwipeUp={() => {
+          disableTextSelectionTemporarily();
+          setIsAppBarVisible(false);
+        }}
+        onSwipeDown={() => {
+          disableTextSelectionTemporarily();
+          setIsAppBarVisible(true);
+        }}
         onSwipeLeft={disableTextSelectionTemporarily}
         onSwipeRight={disableTextSelectionTemporarily}
         onSelected={onSelected}
-        onReady={() => changeFontSize(`20px`)}
+        onReady={() => changeFontSize(selectedFontSize + 'px')}
         menuItems={[
           {
             label: '🟡',
@@ -177,99 +167,96 @@ const BookReader = () => {
   );
 
   return (
-    <GestureHandlerRootView>
-      <SafeAreaView
-        style={{
-          ...styles.container,
-          paddingTop: isAppBarVisible ? insets.top : 0,
-          paddingBottom: 0,
-          paddingLeft: insets.left,
-          paddingRight: insets.right,
-        }}>
-        <PanGestureHandler onGestureEvent={onGestureEvent}>
-          <View style={styles.reader}>
-            {isAppBarVisible && (
-              <Appbar.Header>
-                <Appbar.Content title={bookTitle} />
-                <Appbar.BackAction
-                  onPress={() => {
-                    router.navigate('/bookshelf');
-                  }}
-                />
-                <Appbar.Action
-                  icon="book-settings-outline"
-                  onPress={() => setIsSettingModalVisible(true)}
-                />
-              </Appbar.Header>
-            )}
-            {memoReader}
+    <SafeAreaView
+      style={{
+        ...styles.container,
+        paddingTop: isAppBarVisible ? insets.top : 0,
+        paddingBottom: 0,
+        paddingLeft: insets.left,
+        paddingRight: insets.right,
+      }}>
+      <View style={styles.reader}>
+        {isAppBarVisible && (
+          <Appbar.Header>
+            <Appbar.Content title={bookTitle} />
+            <Appbar.BackAction
+              onPress={() => {
+                router.navigate('/bookshelf');
+              }}
+            />
+            <Appbar.Action
+              icon="book-settings-outline"
+              onPress={() => setIsSettingModalVisible(true)}
+            />
+          </Appbar.Header>
+        )}
+        {memoReader}
+      </View>
+
+      <Portal>
+        <Modal
+          visible={isSettingModalVisible}
+          onDismiss={() => setIsSettingModalVisible(false)}
+          contentContainerStyle={styles.modal}>
+          <View style={styles.fontSelectContainer}>
+            <View style={styles.rowContainer}>
+              <Text style={styles.label}>Font: </Text>
+              <ScrollView
+                horizontal={true}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContainer}>
+                {fonts.map((font, index) => (
+                  <Button
+                    key={index}
+                    mode={selectedFont === font ? 'contained' : 'outlined'}
+                    onPress={() => handleFontSelected(font)}
+                    style={styles.fontButton}>
+                    {font}
+                  </Button>
+                ))}
+              </ScrollView>
+            </View>
           </View>
-        </PanGestureHandler>
-        <Portal>
-          <Modal
-            visible={isSettingModalVisible}
-            onDismiss={() => setIsSettingModalVisible(false)}
-            contentContainerStyle={styles.modal}>
-            <View style={styles.fontSelectContainer}>
-              <View style={styles.rowContainer}>
-                <Text style={styles.label}>Font: </Text>
-                <ScrollView
-                  horizontal={true}
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.scrollContainer}>
-                  {fonts.map((font, index) => (
-                    <Button
-                      key={index}
-                      mode={selectedFont === font ? 'contained' : 'outlined'}
-                      onPress={() => handleFontSelected(font)}
-                      style={styles.fontButton}>
-                      {font}
-                    </Button>
-                  ))}
-                </ScrollView>
-              </View>
-            </View>
 
-            <View style={styles.fontSelectContainer}>
-              <View style={styles.rowContainer}>
-                <Text style={styles.label}>Font Size: </Text>
-                <View style={styles.progressContainer}>
-                  <IconButton
-                    icon="format-annotation-minus"
-                    size={20}
-                    mode="outlined"
-                    disabled={selectedFontSize <= 10}
-                    onPress={() => handleFontSizeChange(-2)}
-                    style={[
-                      styles.sizeButton,
-                      selectedFontSize <= 10 && styles.disabledButton,
-                    ]}></IconButton>
+          <View style={styles.fontSelectContainer}>
+            <View style={styles.rowContainer}>
+              <Text style={styles.label}>Font Size: </Text>
+              <View style={styles.progressContainer}>
+                <IconButton
+                  icon="format-annotation-minus"
+                  size={20}
+                  mode="outlined"
+                  disabled={selectedFontSize <= 10}
+                  onPress={() => handleFontSizeChange(-2)}
+                  style={[
+                    styles.sizeButton,
+                    selectedFontSize <= 10 && styles.disabledButton,
+                  ]}></IconButton>
 
-                  <View style={styles.progressWrapper}>
-                    <ProgressBar
-                      progress={(selectedFontSize - 10) / 20}
-                      color="#2196F3"
-                      style={styles.progressBar}
-                    />
-                  </View>
-
-                  <IconButton
-                    icon="format-annotation-plus"
-                    size={20}
-                    mode="outlined"
-                    disabled={selectedFontSize >= 30}
-                    onPress={() => handleFontSizeChange(2)}
-                    style={[
-                      styles.sizeButton,
-                      selectedFontSize >= 30 && styles.disabledButton,
-                    ]}></IconButton>
+                <View style={styles.progressWrapper}>
+                  <ProgressBar
+                    progress={(selectedFontSize - 10) / 20}
+                    color="#2196F3"
+                    style={styles.progressBar}
+                  />
                 </View>
+
+                <IconButton
+                  icon="format-annotation-plus"
+                  size={20}
+                  mode="outlined"
+                  disabled={selectedFontSize >= 30}
+                  onPress={() => handleFontSizeChange(2)}
+                  style={[
+                    styles.sizeButton,
+                    selectedFontSize >= 30 && styles.disabledButton,
+                  ]}></IconButton>
               </View>
             </View>
-          </Modal>
-        </Portal>
-      </SafeAreaView>
-    </GestureHandlerRootView>
+          </View>
+        </Modal>
+      </Portal>
+    </SafeAreaView>
   );
 };
 
