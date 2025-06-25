@@ -16,23 +16,33 @@ import Reverso from '@/components/translate/reverso';
 import { Reader, useReader } from '@/vendor/epubjs-react-native/src';
 
 const BookReader = () => {
-  const { width, height } = useWindowDimensions();
   const [isAppBarVisible, setIsAppBarVisible] = useState(false);
   const [isSettingModalVisible, setIsSettingModalVisible] = useState(false);
   const [selectedFont, setSelectedFont] = useState('');
-  const [fontSize, setFontSize] = useState(16);
+  const [selectedFontSize, setSelectedFontSize] = useState(16);
+  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  let reverso = new Reverso();
   const { bookUri, bookTitle } = useLocalSearchParams();
-
   const { changeFontSize, changeFontFamily, changeTheme, theme } = useReader();
 
+  const reverso = new Reverso();
   const defaultTheme = theme;
   const disableTextSelectionTimeout = useRef<NodeJS.Timeout>();
 
+  const fonts = [
+    'Arial',
+    'Verdana',
+    'Tahoma',
+    'Trebuchet MS',
+    'Times New Roman',
+    'Georgia',
+    'Garamond',
+    'Courier New',
+    'Brush Script MT',
+  ];
+
   const disableTextSelectionTemporarily = () => {
-    console.log('disableTextSelectionTemporarily');
     if (disableTextSelectionTimeout.current) {
       clearTimeout(disableTextSelectionTimeout.current);
     }
@@ -66,28 +76,16 @@ const BookReader = () => {
     }, 500);
   };
 
-  const fonts = [
-    'Arial',
-    'Verdana',
-    'Tahoma',
-    'Trebuchet MS',
-    'Times New Roman',
-    'Georgia',
-    'Garamond',
-    'Courier New',
-    'Brush Script MT',
-  ];
-
-  const handleFontSelect = (fontName: string) => {
+  const handleFontSelected = (fontName: string) => {
     setSelectedFont(fontName);
     console.log('selected font: ', fontName);
     changeFontFamily(fontName);
   };
 
   const handleFontSizeChange = (delta: number) => {
-    const newSize = fontSize + delta;
+    const newSize = selectedFontSize + delta;
     if (newSize >= 10 && newSize <= 30) {
-      setFontSize(newSize);
+      setSelectedFontSize(newSize);
       console.log('selected font size: ', newSize);
       changeFontSize(newSize.toString() + 'px');
     }
@@ -95,20 +93,15 @@ const BookReader = () => {
 
   // Hide bottom tab bar when component mounts, restore when unmounts
   useEffect(() => {
-    // Find the parent tab navigator
     let parent = navigation.getParent();
     while (parent && parent.getState().type !== 'tab') {
       parent = parent.getParent();
     }
 
     if (parent) {
-      parent.setOptions({
-        tabBarStyle: { display: 'none' },
-      });
+      parent.setOptions({ tabBarStyle: { display: 'none' } });
       return () => {
-        parent.setOptions({
-          tabBarStyle: { display: 'flex' },
-        });
+        parent.setOptions({ tabBarStyle: { display: 'flex' } });
       };
     }
   }, [navigation]);
@@ -228,7 +221,7 @@ const BookReader = () => {
                     <Button
                       key={index}
                       mode={selectedFont === font ? 'contained' : 'outlined'}
-                      onPress={() => handleFontSelect(font)}
+                      onPress={() => handleFontSelected(font)}
                       style={styles.fontButton}>
                       {font}
                     </Button>
@@ -245,16 +238,16 @@ const BookReader = () => {
                     icon="format-annotation-minus"
                     size={20}
                     mode="outlined"
-                    disabled={fontSize <= 10}
+                    disabled={selectedFontSize <= 10}
                     onPress={() => handleFontSizeChange(-2)}
                     style={[
                       styles.sizeButton,
-                      fontSize <= 10 && styles.disabledButton,
+                      selectedFontSize <= 10 && styles.disabledButton,
                     ]}></IconButton>
 
                   <View style={styles.progressWrapper}>
                     <ProgressBar
-                      progress={(fontSize - 10) / 20}
+                      progress={(selectedFontSize - 10) / 20}
                       color="#2196F3"
                       style={styles.progressBar}
                     />
@@ -264,11 +257,11 @@ const BookReader = () => {
                     icon="format-annotation-plus"
                     size={20}
                     mode="outlined"
-                    disabled={fontSize >= 30}
+                    disabled={selectedFontSize >= 30}
                     onPress={() => handleFontSizeChange(2)}
                     style={[
                       styles.sizeButton,
-                      fontSize >= 30 && styles.disabledButton,
+                      selectedFontSize >= 30 && styles.disabledButton,
                     ]}></IconButton>
                 </View>
               </View>
