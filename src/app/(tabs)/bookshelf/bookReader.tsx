@@ -10,14 +10,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 
-import { Reader, useReader } from '@epubjs-react-native/core';
+import { Reader, useReader } from '@/vendor/epubjs-react-native/src';
 import { useFileSystem } from '@epubjs-react-native/expo-file-system';
 
 import Reverso from '@/components/translate/reverso';
 
 const BookReader = () => {
   const { width, height } = useWindowDimensions();
-  const [appBarVisible, setAppBarVisible] = useState(false); // Default to hidden
+  const [appBarVisible, setAppBarVisible] = useState(false);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   let reverso = new Reverso();
@@ -29,6 +29,7 @@ const BookReader = () => {
   const disableTextSelectionTimeout = useRef<NodeJS.Timeout>();
 
   const disableTextSelectionTemporarily = () => {
+    console.log("disableTextSelectionTemporarily");
     if (disableTextSelectionTimeout.current) {
       clearTimeout(disableTextSelectionTimeout.current);
     }
@@ -59,7 +60,7 @@ const BookReader = () => {
           'user-select': 'auto',
         },
       });
-    }, 1000);
+    }, 500);
   };
 
   // Hide bottom tab bar when component mounts, restore when unmounts
@@ -120,10 +121,12 @@ const BookReader = () => {
       <Reader
         src={bookUri as string}
         width={width - insets.left - insets.right}
-        height={height - (appBarVisible ? insets.top + 56 : 0)}
+        height={height - insets.top - insets.bottom -(appBarVisible ? 56 : 0)}
         fileSystem={useFileSystem}
-        enableSelection={true}
+        enableSelection={false}
         enableSwipe={true}
+        onSwipeUp={disableTextSelectionTemporarily}
+        onSwipeDown={disableTextSelectionTemporarily}
         onSwipeLeft={disableTextSelectionTemporarily}
         onSwipeRight={disableTextSelectionTemporarily}
         onSelected={onSelected}
