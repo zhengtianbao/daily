@@ -37,7 +37,7 @@ const BookReader = () => {
   }, [navigation]);
 
   const reverso = new Reverso();
-  const defaultTheme = theme;
+  const defaultTheme = { ...theme, body: { ...theme.body, background: '#CCE8CF' } };
   const disableTextSelectionTimeout = useRef<NodeJS.Timeout>();
 
   const fonts = [
@@ -143,7 +143,10 @@ const BookReader = () => {
         onSwipeLeft={disableTextSelectionTemporarily}
         onSwipeRight={disableTextSelectionTemporarily}
         onSelected={onSelected}
-        onReady={() => changeFontSize(selectedFontSize + 'px')}
+        onReady={() => {
+          changeFontSize(selectedFontSize + 'px');
+          changeTheme(defaultTheme);
+        }}
         menuItems={[
           {
             label: '🟡',
