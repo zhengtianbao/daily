@@ -8,17 +8,23 @@ import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useFileSystem } from '@epubjs-react-native/expo-file-system';
 
 import Reverso from '@/components/translate/reverso';
-import { Reader, useReader } from '@/vendor/epubjs-react-native/src';
+import { database } from '@/db/database';
+import { Location, Reader, useReader } from '@/vendor/epubjs-react-native/src';
 
 const BookReader = () => {
   const [isAppBarVisible, setIsAppBarVisible] = useState(false);
   const [isSettingModalVisible, setIsSettingModalVisible] = useState(false);
   const [selectedFont, setSelectedFont] = useState('');
   const [selectedFontSize, setSelectedFontSize] = useState(20);
+  const [initialLocation, setInitialLocation] = useState<string | undefined>(undefined);
+  const [readingProgress, setReadingProgress] = useState(0);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const { bookUri, bookTitle } = useLocalSearchParams();
+  const { bookUri, bookTitle } = useLocalSearchParams<{
+    bookUri: string;
+    bookTitle: string;
+  }>();
   const { changeFontSize, changeFontFamily, changeTheme, theme } = useReader();
 
   // Hide bottom tab bar when component mounts, restore when unmounts
@@ -35,6 +41,40 @@ const BookReader = () => {
       };
     }
   }, [navigation]);
+
+  useEffect(() => {
+    const initializeBook = async () => {
+      const book = await database.getBookByTitle(bookTitle);
+      if (book?.currentLocation !== null) {
+        setInitialLocation(book?.currentLocation);
+        console.log('Loaded saved location:', book?.currentLocation);
+      }
+      if (book?.progress !== undefined) {
+        setReadingProgress(book.progress);
+      }
+    };
+
+    initializeBook();
+  }, []);
+
+  const handleLocationChange = async (
+    totalLocations: number,
+    currentLocation: Location,
+    progress: number
+  ) => {
+    try {
+      if (currentLocation && currentLocation.start) {
+        await database.updateBook(bookTitle, currentLocation.start.cfi);
+        if (totalLocations !== 0) {
+          await database.updateBookProgress(bookTitle, progress);
+          setReadingProgress(progress);
+          console.log('Reading progress updated:', progress);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving location:', error);
+    }
+  };
 
   const reverso = new Reverso();
   const defaultTheme = { ...theme, body: { ...theme.body, background: '#CCE8CF' } };
@@ -128,8 +168,10 @@ const BookReader = () => {
       <Reader
         src={bookUri as string}
         width={width - insets.left - insets.right}
-        height={height - insets.top - insets.bottom - (isAppBarVisible ? 64 : 0)}
+        height={height - (isAppBarVisible ? 64 : 0)}
         fileSystem={useFileSystem}
+        initialLocation={initialLocation}
+        onLocationChange={handleLocationChange}
         enableSelection={false}
         enableSwipe={true}
         onSwipeUp={() => {
@@ -166,21 +208,14 @@ const BookReader = () => {
       />
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [bookUri, initialLocation]
   );
 
   return (
-    <SafeAreaView
-      style={{
-        ...styles.container,
-        paddingTop: isAppBarVisible ? insets.top : 0,
-        paddingBottom: 0,
-        paddingLeft: insets.left,
-        paddingRight: insets.right,
-      }}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.reader}>
         {isAppBarVisible && (
-          <Appbar.Header>
+          <Appbar.Header style={styles.appBar}>
             <Appbar.Content title={bookTitle} />
             <Appbar.BackAction
               onPress={() => {
@@ -267,12 +302,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  appBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 1000, // 确保在最上层
+    width: '100%',
+  },
   reader: {
     flex: 1,
   },
   modal: {
     backgroundColor: 'white',
-    padding: 20,
+    padding: 10,
+    width: '90%',
+    alignSelf: 'center',
+    borderRadius: 10,
   },
   fontSelectContainer: {
     padding: 10,
@@ -312,7 +357,6 @@ const styles = StyleSheet.create({
   progressBar: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#E0E0E0',
   },
 });
 
