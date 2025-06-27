@@ -209,16 +209,22 @@ const BookReader = () => {
     []
   );
 
-  const onWordSelected = async (selection: string, cfiRange: string) => {
+  const onWordSelected = async (
+    selection: string,
+    cfiRange: string,
+    sentence: string,
+    sentenceCfiRange: string
+  ) => {
     console.log('word selected:', selection);
-    console.log('cfiRange', cfiRange);
+    console.log('cfiRange:', cfiRange);
+    console.log('sentence:', sentence);
+    console.log('sentenceCfiRange:', sentenceCfiRange);
     if (selection.includes(' ')) {
-      await onSentenceSelected(selection);
       return;
     }
     try {
       const wordInfo = await dictionary.getWordInfoByWord(selection);
-      console.log('WordInfo: ', wordInfo);
+      // console.log('WordInfo: ', wordInfo);
       if (wordInfo) {
         setSelectedWord(wordInfo);
         setIsWordInfoModalVisible(true);
