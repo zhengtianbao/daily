@@ -41,7 +41,15 @@
           "iCloudContainerEnvironment": "Production"
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-asset",
+        {
+          "assets": [
+            "db/stardict.db"
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
