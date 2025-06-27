@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
-import { LongPressGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { Appbar, Button, IconButton, Modal, Portal, ProgressBar, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,29 +13,6 @@ import { database } from '@/db/database';
 import { WordInfo, dictionary } from '@/db/dictionary';
 import { Location, Reader, useReader } from '@/vendor/epubjs-react-native/src';
 
-const defaultWordInfo: WordInfo = {
-  audio: '',
-  bnc: 225,
-  collins: 5,
-  definition: `n. possession of controlling influence
-  n. (physics) the rate of doing work; measured in watts (= joules/second)
-  n. one possessing or exercising power or influence or authority
-  v. supply the force or power for the functioning of`,
-  detail: '',
-  exchange: 's:powers/d:powered/p:powered/3:powers/i:powering',
-  frq: 271,
-  id: 547457,
-  oxford: 1,
-  phonetic: "'pauә",
-  pos: '',
-  sw: 'power',
-  tag: 'gk cet4 ky ielts',
-  translation: `n. 力, 体力, 力量, 势力, 动力, 权力, 强国, 乘方, 强度, 幂, 功率
-  vt. 使...有力量, 供以动力, 激励
-  [计] 乘幂; DOS外部命令:能控制许多电池电源计算机上的电源管理特性`,
-  word: 'power',
-};
-
 const BookReader = () => {
   const [isAppBarVisible, setIsAppBarVisible] = useState(false);
   const [isSettingModalVisible, setIsSettingModalVisible] = useState(false);
@@ -44,7 +20,7 @@ const BookReader = () => {
   const [selectedFontSize, setSelectedFontSize] = useState(20);
   const [isWordInfoModalVisible, setIsWordInfoModalVisible] = useState(false);
   const [pressY, setPressY] = useState(0);
-  const [selectedWord, setSelectedWord] = useState<WordInfo>(defaultWordInfo);
+  const [selectedWord, setSelectedWord] = useState<WordInfo>();
   const [initialLocation, setInitialLocation] = useState<string | undefined>(undefined);
   const [readingProgress, setReadingProgress] = useState(0);
   const { width, height } = useWindowDimensions();
@@ -170,28 +146,6 @@ const BookReader = () => {
     }
   };
 
-  const onSelected = async (selection: string, cfiRange: string) => {
-    console.log('selected', selection);
-
-    try {
-      const translationsNew = await reverso.getContextFromWebPage(selection, 'english', 'chinese');
-
-      if (translationsNew.Translations.length === 0) {
-        // let translation = await reverso.getTranslationFromAPI(selection, 'english', 'chinese');
-        // setPanelContent(translation);
-      } else {
-        // translationsNew.Book = bookTitle;
-        // translationsNew.TextView = latestSentence.current;
-        // setPanelContent(translationsNew);
-      }
-      console.log('translationsNew', translationsNew);
-      // setIsPanelVisible(true);
-    } catch (error) {
-      console.error('Error fetching translation:', error);
-      // setIsPanelVisible(false);
-    }
-  };
-
   const onSentenceSelected = useCallback(
     debounce(async (selection: string) => {
       try {
@@ -212,11 +166,15 @@ const BookReader = () => {
   const onWordSelected = async (
     selection: string,
     cfiRange: string,
+    paragraphText: string,
+    paragraphCfiRange: string,
     sentence: string,
     sentenceCfiRange: string
   ) => {
     console.log('word selected:', selection);
     console.log('cfiRange:', cfiRange);
+    console.log('paragraphText:', paragraphText);
+    console.log('paragraphCfiRange:', paragraphCfiRange);
     console.log('sentence:', sentence);
     console.log('sentenceCfiRange:', sentenceCfiRange);
     if (selection.includes(' ')) {
@@ -256,10 +214,9 @@ const BookReader = () => {
         onSwipeLeft={disableTextSelectionTemporarily}
         onSwipeRight={disableTextSelectionTemporarily}
         onSelected={onWordSelected}
-        onLongPress={(e: LongPressGestureHandlerEventPayload) => {
+        onLongPress={e => {
           if (e) {
-            const y = e.absoluteY;
-            setPressY(y);
+            setPressY(e.absoluteY);
           }
         }}
         onReady={() => {
