@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { LongPressGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { Appbar, Button, IconButton, Modal, Portal, ProgressBar, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -42,6 +43,7 @@ const BookReader = () => {
   const [selectedFont, setSelectedFont] = useState('');
   const [selectedFontSize, setSelectedFontSize] = useState(20);
   const [isWordInfoModalVisible, setIsWordInfoModalVisible] = useState(false);
+  const [pressY, setPressY] = useState(0);
   const [selectedWord, setSelectedWord] = useState<WordInfo>(defaultWordInfo);
   const [initialLocation, setInitialLocation] = useState<string | undefined>(undefined);
   const [readingProgress, setReadingProgress] = useState(0);
@@ -248,6 +250,12 @@ const BookReader = () => {
         onSwipeLeft={disableTextSelectionTemporarily}
         onSwipeRight={disableTextSelectionTemporarily}
         onSelected={onWordSelected}
+        onLongPress={(e: LongPressGestureHandlerEventPayload) => {
+          if (e) {
+            const y = e.absoluteY;
+            setPressY(y);
+          }
+        }}
         onReady={() => {
           changeFontSize(selectedFontSize + 'px');
           changeTheme(defaultTheme);
@@ -344,11 +352,19 @@ const BookReader = () => {
           </Modal>
         </Portal>
       </SafeAreaView>
+
       <Portal>
         <Modal
           visible={isWordInfoModalVisible}
           onDismiss={() => setIsWordInfoModalVisible(false)}
-          contentContainerStyle={styles.wordInfoModal}>
+          contentContainerStyle={[
+            styles.wordInfoModal,
+            {
+              top: pressY < height / 2 ? pressY + 40 : 40,
+              left: width * 0.1,
+              width: width * 0.8,
+            },
+          ]}>
           <ScrollView>
             <View>
               <Text>{selectedWord?.word}</Text>
@@ -382,10 +398,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   wordInfoModal: {
+    position: 'absolute',
     backgroundColor: 'white',
     padding: 10,
     width: '80%',
-    alignSelf: 'center',
+    height: '40%',
     borderRadius: 10,
     zIndex: 1000,
   },
