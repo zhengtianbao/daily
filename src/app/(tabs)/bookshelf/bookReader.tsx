@@ -166,17 +166,13 @@ const BookReader = () => {
   const onWordSelected = async (
     selection: string,
     cfiRange: string,
-    paragraphText: string,
-    paragraphCfiRange: string,
-    sentence: string,
-    sentenceCfiRange: string
+    paragraph: string,
+    sentence: string
   ) => {
     console.log('word selected:', selection);
     console.log('cfiRange:', cfiRange);
-    console.log('paragraphText:', paragraphText);
-    console.log('paragraphCfiRange:', paragraphCfiRange);
+    console.log('paragraph:', paragraph);
     console.log('sentence:', sentence);
-    console.log('sentenceCfiRange:', sentenceCfiRange);
     if (selection.includes(' ')) {
       return;
     }
