@@ -43,3 +43,6 @@ app-example
 
 # Vendor
 vendor/
+
+# database assets
+assets/db/*
