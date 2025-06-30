@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { Appbar, Button, IconButton, Modal, Portal, ProgressBar, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -19,8 +26,13 @@ const BookReader = () => {
   const [selectedFont, setSelectedFont] = useState('');
   const [selectedFontSize, setSelectedFontSize] = useState(20);
   const [isWordInfoModalVisible, setIsWordInfoModalVisible] = useState(false);
+  const [wordInfoActiveTab, setWordInfoActiveTab] = useState('word');
   const [pressY, setPressY] = useState(0);
   const [selectedWord, setSelectedWord] = useState<WordInfo>();
+  const [selectedWordSentence, setSelectedWordSentence] = useState<string | undefined>(undefined);
+  const [selectedWordSentenceTranslation, setSelectedWordSentenceTranslation] = useState<
+    string | undefined
+  >(undefined);
   const [initialLocation, setInitialLocation] = useState<string | undefined>(undefined);
   const [readingProgress, setReadingProgress] = useState(0);
   const { width, height } = useWindowDimensions();
@@ -146,18 +158,23 @@ const BookReader = () => {
     }
   };
 
-  const onSentenceSelected = useCallback(
-    debounce(async (selection: string) => {
+  const translateSentence = useCallback(
+    debounce(async () => {
       try {
-        console.log('sentence selected:', selection);
-        const translationsNew = await reverso.getContextFromWebPage(
-          selection,
+        console.log(1111);
+        if (!selectedWordSentence) {
+          return;
+        }
+        console.log(222);
+        const translationsNew = await reverso.getTranslationFromAPI(
+          selectedWordSentence,
           'english',
           'chinese'
         );
-        console.log('translationsNew', translationsNew);
+        console.log(translationsNew);
+        setSelectedWordSentenceTranslation(translationsNew.Translation);
       } catch (error) {
-        console.error('Error fetching translation:', error);
+        console.log('Error fetching translation:', error);
       }
     }, 2000),
     []
@@ -181,6 +198,7 @@ const BookReader = () => {
       // console.log('WordInfo: ', wordInfo);
       if (wordInfo) {
         setSelectedWord(wordInfo);
+        setSelectedWordSentence(sentence);
         setIsWordInfoModalVisible(true);
       }
     } catch (error) {
@@ -315,7 +333,10 @@ const BookReader = () => {
       <Portal>
         <Modal
           visible={isWordInfoModalVisible}
-          onDismiss={() => setIsWordInfoModalVisible(false)}
+          onDismiss={() => {
+            setIsWordInfoModalVisible(false);
+            setWordInfoActiveTab('word');
+          }}
           contentContainerStyle={[
             styles.wordInfoModal,
             {
@@ -324,17 +345,66 @@ const BookReader = () => {
               width: width * 0.8,
             },
           ]}>
-          <ScrollView>
-            <View>
-              <Text>{selectedWord?.word}</Text>
-              <Text>{'[' + selectedWord?.phonetic + ']'}</Text>
-            </View>
-            <View>
-              <Text>{selectedWord?.definition}</Text>
-            </View>
-            <View>
-              <Text>{selectedWord?.translation}</Text>
-            </View>
+          {/* Tab Buttons */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tabButton, wordInfoActiveTab === 'word' && styles.activeTab]}
+              onPress={() => setWordInfoActiveTab('word')}>
+              <Text style={[styles.tabText, wordInfoActiveTab === 'word' && styles.activeTabText]}>
+                单词翻译
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tabButton, wordInfoActiveTab === 'sentence' && styles.activeTab]}
+              onPress={() => {
+                translateSentence();
+                setWordInfoActiveTab('sentence');
+              }}>
+              <Text
+                style={[styles.tabText, wordInfoActiveTab === 'sentence' && styles.activeTabText]}>
+                句子翻译
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tabButton, wordInfoActiveTab === 'ai' && styles.activeTab]}
+              onPress={() => setWordInfoActiveTab('ai')}>
+              <Text style={[styles.tabText, wordInfoActiveTab === 'ai' && styles.activeTabText]}>
+                AI助手
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Tab Content */}
+          <ScrollView style={styles.contentContainer}>
+            {wordInfoActiveTab === 'word' && (
+              <View>
+                <View>
+                  <Text>{selectedWord?.word}</Text>
+                  <Text>{'[' + selectedWord?.phonetic + ']'}</Text>
+                </View>
+                <View>
+                  <Text>{selectedWord?.definition}</Text>
+                </View>
+                <View>
+                  <Text>{selectedWord?.translation}</Text>
+                </View>
+              </View>
+            )}
+            {wordInfoActiveTab === 'sentence' && (
+              <View>
+                <View>
+                  <Text>{selectedWordSentence}</Text>
+                </View>
+                <View>
+                  <Text>{selectedWordSentenceTranslation}</Text>
+                </View>
+              </View>
+            )}
+            {wordInfoActiveTab === 'ai' && (
+              <View>
+                <Text>AI助手内容（待实现）</Text>
+              </View>
+            )}
           </ScrollView>
         </Modal>
       </Portal>
@@ -371,6 +441,33 @@ const styles = StyleSheet.create({
     width: '90%',
     alignSelf: 'center',
     borderRadius: 10,
+  },
+  contentContainer: {
+    flexGrow: 1,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 5,
+    alignItems: 'center',
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#6200ee',
+  },
+  tabText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  activeTabText: {
+    color: '#6200ee',
+    fontWeight: 'bold',
   },
   fontSelectContainer: {
     padding: 10,
