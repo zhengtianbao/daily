@@ -43,7 +43,7 @@ const BookReader = () => {
     bookUri: string;
     bookTitle: string;
   }>();
-  const { changeFontSize, changeFontFamily, changeTheme, theme } = useReader();
+  const { changeFontSize, changeTheme, theme } = useReader();
 
   // Hide bottom tab bar when component mounts, restore when unmounts
   useEffect(() => {
@@ -99,15 +99,12 @@ const BookReader = () => {
   const disableTextSelectionTimeout = useRef<NodeJS.Timeout>();
 
   const fonts = [
-    'Arial',
-    'Verdana',
-    'Tahoma',
-    'Trebuchet MS',
-    'Times New Roman',
-    'Georgia',
-    'Garamond',
-    'Courier New',
-    'Brush Script MT',
+    'SpaceMono',
+    'Roboto',
+    'Menbere',
+    'JetBrainsMono',
+    'Manufacturing',
+    'DancingScript',
   ];
 
   const disableTextSelectionTemporarily = () => {
@@ -147,7 +144,11 @@ const BookReader = () => {
   const handleFontSelected = (fontName: string) => {
     setSelectedFont(fontName);
     console.log('selected font: ', fontName);
-    changeFontFamily(fontName);
+    // changeFontFamily() not work with custom font.
+    changeTheme({
+      ...defaultTheme,
+      '* p': { 'font-family': fontName + ' !important' },
+    });
   };
 
   const handleFontSizeChange = (delta: number) => {
