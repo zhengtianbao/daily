@@ -15,7 +15,8 @@ import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useFileSystem } from '@epubjs-react-native/expo-file-system';
 import { debounce } from 'lodash';
 
-import Reverso from '@/components/translate/reverso';
+import Reverso from '@/components/translators/reverso';
+import { client as TmtClient } from '@/components/translators/tencent';
 import { database } from '@/db/database';
 import { WordInfo, dictionary } from '@/db/dictionary';
 import { Location, Reader, useReader } from '@/vendor/epubjs-react-native/src';
@@ -161,23 +162,22 @@ const BookReader = () => {
   const translateSentence = useCallback(
     debounce(async () => {
       try {
-        console.log(1111);
         if (!selectedWordSentence) {
           return;
         }
-        console.log(222);
-        const translationsNew = await reverso.getTranslationFromAPI(
+
+        const translationsNew = await TmtClient.getTranslationFromAPI(
           selectedWordSentence,
-          'english',
-          'chinese'
+          'en',
+          'zh'
         );
-        console.log(translationsNew);
-        setSelectedWordSentenceTranslation(translationsNew.Translation);
+
+        setSelectedWordSentenceTranslation(translationsNew.Response.TargetText);
       } catch (error) {
         console.log('Error fetching translation:', error);
       }
-    }, 2000),
-    []
+    }, 1000),
+    [selectedWordSentence]
   );
 
   const onWordSelected = async (
@@ -362,7 +362,7 @@ const BookReader = () => {
               }}>
               <Text
                 style={[styles.tabText, wordInfoActiveTab === 'sentence' && styles.activeTabText]}>
-                句子翻译
+                整句翻译
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
