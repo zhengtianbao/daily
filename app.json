@@ -46,7 +46,7 @@
         "expo-asset",
         {
           "assets": [
-            "db/stardict.db"
+            "assets/db/stardict.db"
           ]
         }
       ]
