@@ -11,6 +11,7 @@ import { Appbar, Button, IconButton, Modal, Portal, ProgressBar, Text } from 're
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import * as Speech from 'expo-speech';
 
 import { useFileSystem } from '@epubjs-react-native/expo-file-system';
 import { debounce } from 'lodash';
@@ -201,6 +202,7 @@ const BookReader = () => {
         setSelectedWord(wordInfo);
         setSelectedWordSentence(sentence);
         setIsWordInfoModalVisible(true);
+        Speech.speak(selection);
       }
     } catch (error) {
       console.error('Error fetching translation:', error);
