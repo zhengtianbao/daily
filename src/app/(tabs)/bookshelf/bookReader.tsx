@@ -46,8 +46,9 @@ const BookReader = () => {
   const [selectedWordSentenceTranslation, setSelectedWordSentenceTranslation] = useState<
     string | undefined
   >(undefined);
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState('请分析句子的语法');
   const [response, setResponse] = useState('');
+  const responseScrollViewRef = useRef<ScrollView>(null);
   const [initialLocation, setInitialLocation] = useState<string | undefined>(undefined);
   const [readingProgress, setReadingProgress] = useState(0);
   const { width, height } = useWindowDimensions();
@@ -229,7 +230,7 @@ const BookReader = () => {
   const handleSubmit = async () => {
     setResponse('');
     try {
-      const question = '请分析下面句子的语法' + selectedWordSentence + prompt;
+      const question = selectedWordSentence + prompt;
       await getCompletionStream(question, chunk => {
         setResponse(prev => prev + chunk);
       });
@@ -406,9 +407,8 @@ const BookReader = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Tab Content */}
-          <ScrollView style={styles.contentContainer}>
-            {wordInfoActiveTab === 'word' && (
+          {wordInfoActiveTab === 'word' && (
+            <ScrollView style={styles.contentContainer}>
               <View>
                 <View>
                   <Text>{selectedWord?.word}</Text>
@@ -421,8 +421,10 @@ const BookReader = () => {
                   <Text>{selectedWord?.translation}</Text>
                 </View>
               </View>
-            )}
-            {wordInfoActiveTab === 'sentence' && (
+            </ScrollView>
+          )}
+          {wordInfoActiveTab === 'sentence' && (
+            <ScrollView style={styles.contentContainer}>
               <View>
                 <View>
                   <Text>{selectedWordSentence}</Text>
@@ -431,22 +433,31 @@ const BookReader = () => {
                   <Text>{selectedWordSentenceTranslation}</Text>
                 </View>
               </View>
-            )}
-            {wordInfoActiveTab === 'ai' && (
-              <View>
-                <Markdown>{response}</Markdown>
+            </ScrollView>
+          )}
+          {wordInfoActiveTab === 'ai' && (
+            <>
+              <ScrollView
+                ref={responseScrollViewRef}
+                onContentSizeChange={() =>
+                  responseScrollViewRef.current?.scrollToEnd({ animated: true })
+                }
+                style={styles.contentContainer}>
                 <View>
-                  <TextInput
-                    value={prompt}
-                    mode="outlined"
-                    style={styles.textInput}
-                    onChangeText={handleInputChange}
-                    right={<TextInput.Icon icon="rocket" onPress={handleSubmit} />}
-                  />
+                  <Markdown>{response}</Markdown>
                 </View>
+              </ScrollView>
+              <View>
+                <TextInput
+                  value={prompt}
+                  mode="outlined"
+                  style={styles.textInput}
+                  onChangeText={handleInputChange}
+                  right={<TextInput.Icon icon="rocket" onPress={handleSubmit} />}
+                />
               </View>
-            )}
-          </ScrollView>
+            </>
+          )}
         </Modal>
       </Portal>
     </>
@@ -484,7 +495,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   contentContainer: {
-    flexGrow: 1,
+    padding: 5,
   },
   tabContainer: {
     flexDirection: 'row',
