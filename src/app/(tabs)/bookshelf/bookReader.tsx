@@ -7,7 +7,17 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { Appbar, Button, IconButton, Modal, Portal, ProgressBar, Text } from 'react-native-paper';
+import Markdown from 'react-native-markdown-display';
+import {
+  Appbar,
+  Button,
+  IconButton,
+  Modal,
+  Portal,
+  ProgressBar,
+  Text,
+  TextInput,
+} from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
@@ -16,6 +26,7 @@ import * as Speech from 'expo-speech';
 import { useFileSystem } from '@epubjs-react-native/expo-file-system';
 import { debounce } from 'lodash';
 
+import { getCompletionStream } from '@/components/openai/deepseek';
 import Reverso from '@/components/translators/reverso';
 import { client as TmtClient } from '@/components/translators/tencent';
 import { database } from '@/db/database';
@@ -35,6 +46,8 @@ const BookReader = () => {
   const [selectedWordSentenceTranslation, setSelectedWordSentenceTranslation] = useState<
     string | undefined
   >(undefined);
+  const [prompt, setPrompt] = useState('');
+  const [response, setResponse] = useState('');
   const [initialLocation, setInitialLocation] = useState<string | undefined>(undefined);
   const [readingProgress, setReadingProgress] = useState(0);
   const { width, height } = useWindowDimensions();
@@ -206,6 +219,22 @@ const BookReader = () => {
       }
     } catch (error) {
       console.error('Error fetching translation:', error);
+    }
+  };
+
+  const handleInputChange = (text: string) => {
+    setPrompt(text);
+  };
+
+  const handleSubmit = async () => {
+    setResponse('');
+    try {
+      const question = '请分析下面句子的语法' + selectedWordSentence + prompt;
+      await getCompletionStream(question, chunk => {
+        setResponse(prev => prev + chunk);
+      });
+    } catch (error) {
+      console.error('Error getting completion:', error);
     }
   };
 
@@ -405,7 +434,16 @@ const BookReader = () => {
             )}
             {wordInfoActiveTab === 'ai' && (
               <View>
-                <Text>AI助手内容（待实现）</Text>
+                <Markdown>{response}</Markdown>
+                <View>
+                  <TextInput
+                    value={prompt}
+                    mode="outlined"
+                    style={styles.textInput}
+                    onChangeText={handleInputChange}
+                    right={<TextInput.Icon icon="rocket" onPress={handleSubmit} />}
+                  />
+                </View>
               </View>
             )}
           </ScrollView>
@@ -471,6 +509,9 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: '#6200ee',
     fontWeight: 'bold',
+  },
+  textInput: {
+    height: 32,
   },
   fontSelectContainer: {
     padding: 10,
