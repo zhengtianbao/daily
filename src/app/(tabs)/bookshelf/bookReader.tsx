@@ -447,13 +447,19 @@ const BookReader = () => {
                   <Markdown>{response}</Markdown>
                 </View>
               </ScrollView>
-              <View>
+              <View style={styles.inputContainer}>
                 <TextInput
                   value={prompt}
                   mode="outlined"
                   style={styles.textInput}
                   onChangeText={handleInputChange}
-                  right={<TextInput.Icon icon="rocket" onPress={handleSubmit} />}
+                />
+                <IconButton
+                  icon="rocket"
+                  mode="contained-tonal"
+                  size={16}
+                  style={styles.iconButton}
+                  onPress={handleSubmit}
                 />
               </View>
             </>
@@ -497,6 +503,19 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 5,
   },
+  inputContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    width: '100%',
+  },
+  textInput: {
+    height: 20,
+    width: '80%',
+  },
+  iconButton: {
+    height: 20,
+    width: '10%',
+  },
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -520,9 +539,6 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: '#6200ee',
     fontWeight: 'bold',
-  },
-  textInput: {
-    height: 32,
   },
   fontSelectContainer: {
     padding: 10,
