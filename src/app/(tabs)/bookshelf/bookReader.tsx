@@ -28,7 +28,6 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { debounce } from 'lodash';
 
 import { getCompletionStream } from '@/components/openai/deepseek';
-import Reverso from '@/components/translators/reverso';
 import { client as TmtClient } from '@/components/translators/tencent';
 import { database } from '@/db/database';
 import { WordInfo, dictionary } from '@/db/dictionary';
@@ -94,7 +93,6 @@ const BookReader = () => {
     }
   };
 
-  const reverso = new Reverso();
   const defaultTheme = { ...theme, body: { ...theme.body, background: '#CCE8CF' } };
   const disableTextSelectionTimeout = useRef<NodeJS.Timeout>();
 
@@ -160,26 +158,25 @@ const BookReader = () => {
     }
   };
 
-  const translateSentence = useCallback(
-    debounce(async () => {
-      try {
-        if (!selectedWordSentence) {
-          return;
-        }
-
-        const translationsNew = await TmtClient.getTranslationFromAPI(
-          selectedWordSentence,
-          'en',
-          'zh'
-        );
-
-        setSelectedWordSentenceTranslation(translationsNew.Response.TargetText);
-      } catch (error) {
-        console.log('Error fetching translation:', error);
+  const translateSentence = useCallback(async () => {
+    try {
+      if (!selectedWordSentence) {
+        return;
       }
-    }, 1000),
-    [selectedWordSentence]
-  );
+
+      const translationsNew = await TmtClient.getTranslationFromAPI(
+        selectedWordSentence,
+        'en',
+        'zh'
+      );
+
+      setSelectedWordSentenceTranslation(translationsNew.Response.TargetText);
+    } catch (error) {
+      console.log('Error fetching translation:', error);
+    }
+  }, [selectedWordSentence]);
+
+  const debouncedTranslateSentence = debounce(translateSentence, 1000);
 
   const onWordSelected = async (
     selection: string,
@@ -377,7 +374,7 @@ const BookReader = () => {
             <TouchableOpacity
               style={[styles.tabButton, wordInfoActiveTab === 'sentence' && styles.activeTab]}
               onPress={() => {
-                translateSentence();
+                debouncedTranslateSentence();
                 setWordInfoActiveTab('sentence');
               }}>
               <Text
