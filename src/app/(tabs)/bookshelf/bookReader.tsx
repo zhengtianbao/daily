@@ -286,7 +286,7 @@ const BookReader = () => {
               <Appbar.Content title={bookTitle} />
               <Appbar.BackAction
                 onPress={() => {
-                  router.navigate('/bookshelf');
+                  router.back();
                 }}
               />
               <Appbar.Action
