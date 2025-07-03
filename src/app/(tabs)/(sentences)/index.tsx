@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Button, Modal, Portal, Text } from 'react-native-paper';
+import { Appbar, Button, Modal, Portal, Text } from 'react-native-paper';
 
 import library from '@/assets/data/library.json';
 
@@ -20,6 +20,9 @@ const SentencesScreen = () => {
 
   return (
     <>
+      <Appbar.Header>
+        <Appbar.Content title="Sentences" />
+      </Appbar.Header>
       <Portal>
         <Modal
           visible={showModal}
@@ -53,6 +56,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     justifyContent: 'center',
     padding: 10,
+    backgroundColor: 'white',
   },
   buttonRow: {
     flexDirection: 'row',

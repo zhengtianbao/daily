@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 
-import { FontAwesome } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 const TabsNavigation = () => {
   return (
@@ -11,15 +11,19 @@ const TabsNavigation = () => {
       <Tabs.Screen
         name="(sentences)"
         options={{
-          title: 'Sentences',
-          tabBarIcon: ({ color }) => <FontAwesome name="heart" size={20} color={color} />,
+          title: 'sentences',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} />
+          ),
         }}
       />
       <Tabs.Screen
         name="bookshelf"
         options={{
           title: 'bookshelf',
-          tabBarIcon: ({ color }) => <FontAwesome name="book" size={20} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'book-sharp' : 'book-outline'} color={color} size={24} />
+          ),
         }}
       />
     </Tabs>
