@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { Tabs, usePathname } from 'expo-router';
 
 import { Ionicons } from '@expo/vector-icons';
 
@@ -7,6 +7,9 @@ const TabsNavigation = () => {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarStyle: {
+          display: usePathname() === '/bookshelf/bookReader' ? 'none' : 'flex',
+        },
       }}>
       <Tabs.Screen
         name="(sentences)"

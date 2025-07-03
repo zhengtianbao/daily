@@ -20,7 +20,7 @@ import {
 } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as Speech from 'expo-speech';
 
 import { useFileSystem } from '@epubjs-react-native/expo-file-system';
@@ -53,27 +53,11 @@ const BookReader = () => {
   const [readingProgress, setReadingProgress] = useState(0);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
   const { bookUri, bookTitle } = useLocalSearchParams<{
     bookUri: string;
     bookTitle: string;
   }>();
   const { changeFontSize, changeTheme, theme } = useReader();
-
-  // Hide bottom tab bar when component mounts, restore when unmounts
-  useEffect(() => {
-    let parent = navigation.getParent();
-    while (parent && parent.getState().type !== 'tab') {
-      parent = parent.getParent();
-    }
-
-    if (parent) {
-      parent.setOptions({ tabBarStyle: { display: 'none' } });
-      return () => {
-        parent.setOptions({ tabBarStyle: { display: 'flex' } });
-      };
-    }
-  }, [navigation]);
 
   useEffect(() => {
     const initializeBook = async () => {
