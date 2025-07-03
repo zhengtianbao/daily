@@ -24,6 +24,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import * as Speech from 'expo-speech';
 
 import { useFileSystem } from '@epubjs-react-native/expo-file-system';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { debounce } from 'lodash';
 
 import { getCompletionStream } from '@/components/openai/deepseek';
@@ -274,7 +275,9 @@ const BookReader = () => {
                 }}
               />
               <Appbar.Action
-                icon="book-settings-outline"
+                icon={({ size, color }) => (
+                  <MaterialIcons name="settings" size={24} color="black" />
+                )}
                 onPress={() => setIsSettingModalVisible(true)}
               />
             </Appbar.Header>

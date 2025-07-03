@@ -8,6 +8,8 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import { router } from 'expo-router';
 
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+
 import { Book, database } from '@/db/database';
 import { getEpubMetadataFromFile } from '@/helpers/epub';
 
@@ -138,21 +140,25 @@ const Bookshelf = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Appbar.Header>
-        {!isSearchBarVisible ? (
-          <>
-            <Appbar.Content title="Bookshelf" />
-            <Appbar.Action icon="magnify" onPress={() => setIsSearchBarVisible(true)} />
-            <Menu
-              visible={isMenuVisible}
-              onDismiss={() => setIsMenuVisible(false)}
-              anchor={
-                <Appbar.Action icon="dots-vertical" onPress={() => setIsMenuVisible(true)} />
-              }>
-              <Menu.Item onPress={importBook} title="Import book" />
-            </Menu>
-          </>
-        ) : (
+      {!isSearchBarVisible ? (
+        <Appbar.Header>
+          <Appbar.Content title="Bookshelf" />
+          <Appbar.Action icon="magnify" onPress={() => setIsSearchBarVisible(true)} />
+          <Menu
+            visible={isMenuVisible}
+            onDismiss={() => setIsMenuVisible(false)}
+            anchor={<Appbar.Action icon="dots-vertical" onPress={() => setIsMenuVisible(true)} />}>
+            <Menu.Item
+              leadingIcon={({ size, color }) => (
+                <FontAwesome6 name="file-import" size={24} color="black" />
+              )}
+              onPress={importBook}
+              title="Import book"
+            />
+          </Menu>
+        </Appbar.Header>
+      ) : (
+        <Appbar.Header>
           <Searchbar
             placeholder="Search book"
             value={searchQuery}
@@ -164,8 +170,8 @@ const Bookshelf = () => {
               setIsSearchBarVisible(false);
             }}
           />
-        )}
-      </Appbar.Header>
+        </Appbar.Header>
+      )}
 
       <View style={styles.body}>
         <FlatGrid

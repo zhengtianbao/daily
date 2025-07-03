@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Appbar, Button, Modal, Portal, Text } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import library from '@/assets/data/library.json';
 
@@ -19,7 +20,7 @@ const SentencesScreen = () => {
   }, []);
 
   return (
-    <>
+    <SafeAreaView style={styles.container}>
       <Appbar.Header>
         <Appbar.Content title="Sentences" />
       </Appbar.Header>
@@ -48,11 +49,14 @@ const SentencesScreen = () => {
       <Button onPress={() => setShowModal(true)}>
         <Text variant="displayLarge">pick</Text>
       </Button>
-    </>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   modalContainer: {
     justifyContent: 'center',
     padding: 10,
