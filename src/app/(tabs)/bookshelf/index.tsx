@@ -150,7 +150,7 @@ const Bookshelf = () => {
             anchor={<Appbar.Action icon="dots-vertical" onPress={() => setIsMenuVisible(true)} />}>
             <Menu.Item
               leadingIcon={({ size, color }) => (
-                <FontAwesome6 name="file-import" size={24} color="black" />
+                <FontAwesome6 name="file-import" size={size} color={color} />
               )}
               onPress={importBook}
               title="Import book"

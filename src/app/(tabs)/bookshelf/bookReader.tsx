@@ -24,7 +24,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import * as Speech from 'expo-speech';
 
 import { useFileSystem } from '@epubjs-react-native/expo-file-system';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { debounce } from 'lodash';
 
 import { getCompletionStream } from '@/components/openai/deepseek';
@@ -272,9 +272,7 @@ const BookReader = () => {
                 }}
               />
               <Appbar.Action
-                icon={({ size, color }) => (
-                  <MaterialIcons name="settings" size={24} color="black" />
-                )}
+                icon={({ size, color }) => <FontAwesome name="gear" size={size} color={color} />}
                 onPress={() => setIsSettingModalVisible(true)}
               />
             </Appbar.Header>
