@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import library from '@/assets/data/library.json';
 
-const SentencesScreen = () => {
+const HomeScreen = () => {
   const [libraryIndex, setLibraryIndex] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -22,7 +22,7 @@ const SentencesScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <Appbar.Header>
-        <Appbar.Content title="Sentences" />
+        <Appbar.Content title="Home" />
       </Appbar.Header>
       <Portal>
         <Modal
@@ -70,4 +70,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SentencesScreen;
+export default HomeScreen;

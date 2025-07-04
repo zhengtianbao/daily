@@ -100,7 +100,7 @@ const Bookshelf = () => {
 
   const onBookItemPressed = (item: Book) => {
     router.navigate({
-      pathname: '/bookshelf/bookReader',
+      pathname: '/bookshelf/reader',
       params: { bookUri: item.uri, bookTitle: item.title },
     });
   };

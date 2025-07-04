@@ -8,13 +8,13 @@ const TabsNavigation = () => {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          display: usePathname() === '/bookshelf/bookReader' ? 'none' : 'flex',
+          display: usePathname() === '/bookshelf/reader' ? 'none' : 'flex',
         },
       }}>
       <Tabs.Screen
-        name="(sentences)"
+        name="index"
         options={{
-          title: 'sentences',
+          title: 'home',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} />
           ),
