@@ -10,16 +10,13 @@ import { Colors } from '@/constants/colors';
 import useDatabase from '@/hooks/useDatabase';
 import { ReaderProvider } from '@/vendor/epubjs-react-native/src';
 
+SplashScreen.preventAutoHideAsync();
 install();
 
-const customDarkTheme = { ...MD3DarkTheme, colors: Colors.dark };
-const customLightTheme = { ...MD3LightTheme, colors: Colors.light };
-
 const App = () => {
-  SplashScreen.preventAutoHideAsync();
-
-  const colorScheme = useColorScheme();
-  const customTheme = colorScheme === 'dark' ? customDarkTheme : customLightTheme;
+  const customDarkTheme = { ...MD3DarkTheme, colors: Colors.dark };
+  const customLightTheme = { ...MD3LightTheme, colors: Colors.light };
+  const customTheme = useColorScheme() === 'dark' ? customDarkTheme : customLightTheme;
   const isDBLoadingComplete = useDatabase();
 
   if (isDBLoadingComplete) {
