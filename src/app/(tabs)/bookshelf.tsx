@@ -11,7 +11,7 @@ import { router } from 'expo-router';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 import { Book, database } from '@/db/database';
-import { getEpubMetadataFromFile } from '@/helpers/epub';
+import { getEpubMetadataFromFile } from '@/utils/epubHelpers';
 
 const BookPlaceholderImage = require('@/assets/images/cover-default-book.png');
 

@@ -27,10 +27,10 @@ import { useFileSystem } from '@epubjs-react-native/expo-file-system';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { debounce } from 'lodash';
 
-import { getCompletionStream } from '@/components/openai/deepseek';
-import { client as TmtClient } from '@/components/translators/tencent';
 import { database } from '@/db/database';
 import { WordInfo, dictionary } from '@/db/dictionary';
+import { client as TmtClient } from '@/modules/bookshelf/services/translators/tencent';
+import { getCompletionStream } from '@/services/openai/deepseek';
 import { Location, Reader, useReader } from '@/vendor/epubjs-react-native/src';
 
 const BookReader = () => {
