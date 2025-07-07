@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
-const Header = ({ title, action }: { title: string; action: () => void }) => {
+const EpubReaderHeader = ({ title, action }: { title: string; action: () => void }) => {
   return (
     <Appbar.Header style={styles.appBar}>
       <Appbar.Content title={title} />
@@ -32,4 +32,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Header;
+export default EpubReaderHeader;

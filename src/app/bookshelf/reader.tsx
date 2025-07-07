@@ -7,10 +7,10 @@ import * as Speech from 'expo-speech';
 import { WordInfo, dictionary } from '@/db/dictionary';
 import Assistant from '@/modules/bookshelf/components/Assistant';
 import EpubReader from '@/modules/bookshelf/components/EpubReader';
-import Header from '@/modules/bookshelf/components/Header';
+import EpubReaderHeader from '@/modules/bookshelf/components/EpubReaderHeader';
 import Settings from '@/modules/bookshelf/components/Settings';
 
-const BookReader = () => {
+const Reader = () => {
   const { bookUri, bookTitle } = useLocalSearchParams<{
     bookUri: string;
     bookTitle: string;
@@ -54,7 +54,9 @@ const BookReader = () => {
   return (
     <SafeAreaView style={styles.container}>
       {isAppBarVisible && (
-        <Header title={bookTitle} action={() => setIsSettingsVisible(true)}></Header>
+        <EpubReaderHeader
+          title={bookTitle}
+          action={() => setIsSettingsVisible(true)}></EpubReaderHeader>
       )}
 
       <EpubReader
@@ -95,4 +97,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BookReader;
+export default Reader;

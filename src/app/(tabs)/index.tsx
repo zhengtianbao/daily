@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import library from '@/assets/data/library.json';
 
-const HomeScreen = () => {
+const Home = () => {
   const [libraryIndex, setLibraryIndex] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -70,4 +70,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default Home;
