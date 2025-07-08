@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { Appbar, Button, Menu, Modal, Portal, Searchbar, Snackbar, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -29,10 +29,6 @@ const Bookshelf = () => {
     book.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  useEffect(() => {
-    loadBooksFromDB();
-  }, []);
-
   const loadBooksFromDB = async () => {
     try {
       const savedBooks = await database.getAllBooks();
@@ -41,6 +37,8 @@ const Bookshelf = () => {
       console.error('Error loading books:', error);
     }
   };
+
+  loadBooksFromDB();
 
   const showSnackBar = (message: string) => {
     setToastMessage(message);
