@@ -1,28 +1,26 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { IconButton, Modal, Portal, Text, TextInput } from 'react-native-paper';
 
+import * as Speech from 'expo-speech';
+
 import { debounce } from 'lodash';
 
-import { WordInfo } from '@/db/dictionary';
+import { WordInfo, dictionary } from '@/db/dictionary';
 import { client as TmtClient } from '@/modules/bookshelf/services/translators/tencent';
+import { ReaderState, useReaderStore } from '@/modules/bookshelf/store/reader';
 import { getCompletionStream } from '@/services/openai/deepseek';
 
-const Assistant = ({
-  visible,
-  setVisible,
-  pressY,
-  selectedWord,
-  selectedWordSentence,
-}: {
-  visible: boolean;
-  setVisible: (visible: boolean) => void;
-  pressY: number;
-  selectedWord: WordInfo;
-  selectedWordSentence: string;
-}) => {
+const Assistant = () => {
+  const isAssistantVisible = useReaderStore((state: ReaderState) => state.isAssistantVisible);
+  const setIsAssistantVisible = useReaderStore((state: ReaderState) => state.setIsAssistantVisible);
+  const selectedWord = useReaderStore((state: ReaderState) => state.selectedWord);
+  const selectedSentence = useReaderStore((state: ReaderState) => state.selectedSentence);
+  const pressAt = useReaderStore((state: ReaderState) => state.pressAt);
+
   const [wordInfoActiveTab, setWordInfoActiveTab] = useState('word');
+  const [selectedWordTranslation, setSelectedWordTranslation] = useState<WordInfo | undefined>();
   const [selectedWordSentenceTranslation, setSelectedWordSentenceTranslation] = useState<
     string | undefined
   >(undefined);
@@ -32,23 +30,33 @@ const Assistant = ({
 
   const { width, height } = useWindowDimensions();
 
+  useEffect(() => {
+    const getWordInfo = async () => {
+      try {
+        const wordInfo = await dictionary.getWordInfoByWord(selectedWord);
+
+        if (wordInfo) {
+          setSelectedWordTranslation(wordInfo);
+          Speech.speak(selectedWord);
+        }
+      } catch (error) {
+        console.error('Error fetching translation:', error);
+      }
+    };
+    getWordInfo();
+  }, [selectedWord]);
+
   const translateSentence = useCallback(async () => {
     try {
-      if (!selectedWordSentence) {
+      if (!selectedSentence) {
         return;
       }
-
-      const translationsNew = await TmtClient.getTranslationFromAPI(
-        selectedWordSentence,
-        'en',
-        'zh'
-      );
-
+      const translationsNew = await TmtClient.getTranslationFromAPI(selectedSentence, 'en', 'zh');
       setSelectedWordSentenceTranslation(translationsNew.Response.TargetText);
     } catch (error) {
       console.log('Error fetching translation:', error);
     }
-  }, [selectedWordSentence]);
+  }, [selectedSentence]);
 
   const debouncedTranslateSentence = debounce(translateSentence, 1000);
 
@@ -59,7 +67,7 @@ const Assistant = ({
   const handleSubmit = async () => {
     setResponse('');
     try {
-      const question = selectedWordSentence + prompt;
+      const question = selectedSentence + prompt;
       await getCompletionStream(question, chunk => {
         setResponse(prev => prev + chunk);
       });
@@ -71,15 +79,15 @@ const Assistant = ({
   return (
     <Portal>
       <Modal
-        visible={visible}
+        visible={isAssistantVisible}
         onDismiss={() => {
-          setVisible(false);
+          setIsAssistantVisible(false);
           setWordInfoActiveTab('word');
         }}
         contentContainerStyle={[
           styles.wordInfoModal,
           {
-            top: pressY < height / 2 ? pressY + 40 : 40,
+            top: pressAt < height / 2 ? pressAt + 40 : 40,
             left: width * 0.1,
             width: width * 0.8,
           },
@@ -117,14 +125,14 @@ const Assistant = ({
           <ScrollView style={styles.contentContainer}>
             <View>
               <View>
-                <Text>{selectedWord?.word}</Text>
-                <Text>{'[' + selectedWord?.phonetic + ']'}</Text>
+                <Text>{selectedWordTranslation?.word}</Text>
+                <Text>{'[' + selectedWordTranslation?.phonetic + ']'}</Text>
               </View>
               <View>
-                <Text>{selectedWord?.definition}</Text>
+                <Text>{selectedWordTranslation?.definition}</Text>
               </View>
               <View>
-                <Text>{selectedWord?.translation}</Text>
+                <Text>{selectedWordTranslation?.translation}</Text>
               </View>
             </View>
           </ScrollView>
@@ -133,7 +141,7 @@ const Assistant = ({
           <ScrollView style={styles.contentContainer}>
             <View>
               <View>
-                <Text>{selectedWordSentence}</Text>
+                <Text>{selectedSentence}</Text>
               </View>
               <View>
                 <Text>{selectedWordSentenceTranslation}</Text>

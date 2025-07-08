@@ -1,37 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import { LongPressGestureHandlerEventPayload } from 'react-native-gesture-handler';
 
 import { useFileSystem } from '@epubjs-react-native/expo-file-system';
 
 import { database } from '@/db/database';
-import { Location, Reader, ePubCfi, useReader } from '@/vendor/epubjs-react-native/src';
+import { ReaderState, useReaderStore } from '@/modules/bookshelf/store/reader';
+import { Location, Reader, useReader } from '@/vendor/epubjs-react-native/src';
 
-const EpubReader = ({
-  bookTitle,
-  bookUri,
-  onSwipeUp,
-  onSwipeDown,
-  onSelected,
-  onLongPress,
-}: {
-  bookTitle: string;
-  bookUri: string;
-  onSwipeUp: () => void;
-  onSwipeDown: () => void;
-  onSelected: (
-    selectedText: string,
-    cfiRange: ePubCfi,
-    paragraphText: string,
-    sentenceText: string
-  ) => void;
-  onLongPress: (e?: LongPressGestureHandlerEventPayload | undefined) => void;
-}) => {
+const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string }) => {
+  const setIsAppBarVisible = useReaderStore((state: ReaderState) => state.setIsAppBarVisible);
+  const setIsAssistantVisible = useReaderStore((state: ReaderState) => state.setIsAssistantVisible);
+  const setSelectedWord = useReaderStore((state: ReaderState) => state.setSelectedWord);
+  const setSelectedSentence = useReaderStore((state: ReaderState) => state.setSelectedSentence);
+  const setPressAt = useReaderStore((state: ReaderState) => state.setPressAt);
+
   const [initialLocation, setInitialLocation] = useState<string | undefined>(undefined);
   const [readingProgress, setReadingProgress] = useState(0);
 
   const { width, height } = useWindowDimensions();
-  const { changeFontSize, changeTheme, theme } = useReader();
+  const { changeTheme, theme } = useReader();
   const disableTextSelectionTimeout = useRef<NodeJS.Timeout>();
   const defaultTheme = { ...theme, body: { ...theme.body, background: '#CCE8CF' } };
   const disableTextSelectionTemporarily = () => {
@@ -85,6 +72,24 @@ const EpubReader = ({
     }
   };
 
+  const onWordSelected = async (
+    selection: string,
+    cfiRange: string,
+    paragraph: string,
+    sentence: string
+  ) => {
+    console.log('word selected:', selection);
+    console.log('cfiRange:', cfiRange);
+    console.log('paragraph:', paragraph);
+    console.log('sentence:', sentence);
+    if (selection.includes(' ')) {
+      return;
+    }
+    setSelectedWord(selection);
+    setSelectedSentence(sentence);
+    setIsAssistantVisible(true);
+  };
+
   useEffect(() => {
     const initializeBook = async () => {
       const book = await database.getBookByTitle(bookTitle);
@@ -112,16 +117,20 @@ const EpubReader = ({
         enableSwipe={true}
         onSwipeUp={() => {
           disableTextSelectionTemporarily();
-          onSwipeUp();
+          setIsAppBarVisible(false);
         }}
         onSwipeDown={() => {
           disableTextSelectionTemporarily();
-          onSwipeDown();
+          setIsAppBarVisible(true);
         }}
         onSwipeLeft={disableTextSelectionTemporarily}
         onSwipeRight={disableTextSelectionTemporarily}
-        onSelected={onSelected}
-        onLongPress={onLongPress}
+        onSelected={onWordSelected}
+        onLongPress={e => {
+          if (e) {
+            setPressAt(e.absoluteY);
+          }
+        }}
         onReady={() => {
           // changeFontSize(selectedFontSize + 'px');
           changeTheme(defaultTheme);

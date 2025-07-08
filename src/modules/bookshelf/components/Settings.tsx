@@ -2,15 +2,12 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, IconButton, Modal, Portal, ProgressBar, Text } from 'react-native-paper';
 
+import { ReaderState, useReaderStore } from '@/modules/bookshelf/store/reader';
 import { useReader } from '@/vendor/epubjs-react-native/src';
 
-const Settings = ({
-  visible,
-  setVisible,
-}: {
-  visible: boolean;
-  setVisible: (visible: boolean) => void;
-}) => {
+const Settings = () => {
+  const isSettingsVisible = useReaderStore((state: ReaderState) => state.isSettingsVisible);
+  const setIsSettingsVisible = useReaderStore((state: ReaderState) => state.setIsSettingsVisible);
   const { changeFontSize, changeTheme, theme } = useReader();
   const [selectedFont, setSelectedFont] = useState('');
   const [selectedFontSize, setSelectedFontSize] = useState(20);
@@ -28,8 +25,6 @@ const Settings = ({
 
   const handleFontSelected = (fontName: string) => {
     setSelectedFont(fontName);
-    console.log('selected font: ', fontName);
-    // changeFontFamily() not work with custom font.
     changeTheme({
       ...defaultTheme,
       '* p': { 'font-family': fontName + ' !important' },
@@ -40,7 +35,6 @@ const Settings = ({
     const newSize = selectedFontSize + delta;
     if (newSize >= 10 && newSize <= 30) {
       setSelectedFontSize(newSize);
-      console.log('selected font size: ', newSize);
       changeFontSize(newSize.toString() + 'px');
     }
   };
@@ -48,8 +42,8 @@ const Settings = ({
   return (
     <Portal>
       <Modal
-        visible={visible}
-        onDismiss={() => setVisible(false)}
+        visible={isSettingsVisible}
+        onDismiss={() => setIsSettingsVisible(false)}
         contentContainerStyle={styles.modal}>
         <View style={styles.fontSelectContainer}>
           <View style={styles.rowContainer}>
