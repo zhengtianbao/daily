@@ -23,7 +23,7 @@ const Settings = () => {
   const { changeFontSize, changeTheme, theme } = useReader();
   const [selectedFont, setSelectedFont] = useState('');
   const [selectedFontSize, setSelectedFontSize] = useState(20);
-  const [selectedBackground, setSelectedBackground] = useState('#CCE8CF');
+  const [selectedBackground, setSelectedBackground] = useState('#FFFFFF');
 
   const paperTheme = useTheme();
   const styles = getStyles(paperTheme);
@@ -85,6 +85,26 @@ const Settings = () => {
 
         <View style={styles.rowContainer}>
           <Text variant="labelMedium" style={styles.label}>
+            Background:{' '}
+          </Text>
+          <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+            {backgroundColors.map((color, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => handleBackgroundSelected(color)}
+                style={[
+                  styles.backgroundColorCircle,
+                  { backgroundColor: color },
+                  selectedBackground === color && styles.selectedBackgroundCircle,
+                ]}>
+                {selectedBackground === color && <MaterialCommunityIcons name="check" size={20} />}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        <View style={styles.rowContainer}>
+          <Text variant="labelMedium" style={styles.label}>
             Font:{' '}
           </Text>
           <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
@@ -142,26 +162,6 @@ const Settings = () => {
               ]}></IconButton>
           </View>
         </View>
-
-        <View style={styles.rowContainer}>
-          <Text variant="labelMedium" style={styles.label}>
-            Background:{' '}
-          </Text>
-          <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-            {backgroundColors.map((color, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => handleBackgroundSelected(color)}
-                style={[
-                  styles.backgroundColorCircle,
-                  { backgroundColor: color },
-                  selectedBackground === color && styles.selectedBackgroundCircle,
-                ]}>
-                {selectedBackground === color && <MaterialCommunityIcons name="check" size={20} />}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
       </Modal>
     </Portal>
   );
@@ -177,13 +177,28 @@ const getStyles = (theme: MD3Theme) =>
       borderRadius: 10,
     },
     rowContainer: {
-      margin: 5,
+      marginTop: 10,
+      marginBottom: 10,
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
     },
     label: {
       minWidth: 80,
+    },
+    backgroundColorCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginHorizontal: 5,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    selectedBackgroundCircle: {
+      borderColor: theme.colors.primary,
+      borderWidth: 3,
     },
     fontButton: {
       marginHorizontal: 5,
@@ -207,20 +222,6 @@ const getStyles = (theme: MD3Theme) =>
     progressBar: {
       height: 8,
       borderRadius: 4,
-    },
-    backgroundColorCircle: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      marginHorizontal: 5,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 2,
-      borderColor: 'transparent',
-    },
-    selectedBackgroundCircle: {
-      borderColor: theme.colors.primary,
-      borderWidth: 3,
     },
   });
 
