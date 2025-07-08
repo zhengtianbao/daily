@@ -20,16 +20,16 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
   const { width, height } = useWindowDimensions();
   const { changeTheme, theme } = useReader();
   const disableTextSelectionTimeout = useRef<NodeJS.Timeout>();
-  const defaultTheme = { ...theme, body: { ...theme.body, background: '#CCE8CF' } };
+
   const disableTextSelectionTemporarily = () => {
     if (disableTextSelectionTimeout.current) {
       clearTimeout(disableTextSelectionTimeout.current);
     }
 
     changeTheme({
-      ...defaultTheme,
+      ...theme,
       body: {
-        ...defaultTheme.body,
+        ...theme.body,
         '-webkit-touch-callout': 'none' /* iOS Safari */,
         '-webkit-user-select': 'none' /* Safari */,
         '-khtml-user-select': 'none' /* Konqueror HTML */,
@@ -41,9 +41,9 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
 
     disableTextSelectionTimeout.current = setTimeout(() => {
       changeTheme({
-        ...defaultTheme,
+        ...theme,
         body: {
-          ...defaultTheme.body,
+          ...theme.body,
           '-webkit-touch-callout': 'auto' /* iOS Safari */,
           '-webkit-user-select': 'auto' /* Safari */,
           '-khtml-user-select': 'auto' /* Konqueror HTML */,
@@ -133,7 +133,7 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
         }}
         onReady={() => {
           // changeFontSize(selectedFontSize + 'px');
-          changeTheme(defaultTheme);
+          // changeTheme(defaultTheme);
         }}
         menuItems={[]}
       />
