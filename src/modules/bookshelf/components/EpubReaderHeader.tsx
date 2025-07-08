@@ -8,6 +8,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { ReaderState, useReaderStore } from '@/modules/bookshelf/store/reader';
 
 const EpubReaderHeader = ({ title }: { title: string }) => {
+  const setIsAppBarVisible = useReaderStore((state: ReaderState) => state.setIsAppBarVisible);
   const setIsSettingsVisible = useReaderStore((state: ReaderState) => state.setIsSettingsVisible);
 
   return (
@@ -15,6 +16,8 @@ const EpubReaderHeader = ({ title }: { title: string }) => {
       <Appbar.Content title={title} />
       <Appbar.BackAction
         onPress={() => {
+          setIsSettingsVisible(false);
+          setIsAppBarVisible(false);
           router.back();
         }}
       />

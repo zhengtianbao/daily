@@ -18,7 +18,7 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
   const [readingProgress, setReadingProgress] = useState(0);
 
   const { width, height } = useWindowDimensions();
-  const { changeTheme, theme } = useReader();
+  const { changeTheme, changeFontSize, theme } = useReader();
   const disableTextSelectionTimeout = useRef<NodeJS.Timeout>();
 
   const disableTextSelectionTemporarily = () => {
@@ -104,6 +104,21 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
     initializeBook();
   }, [bookTitle]);
 
+  const setTheme = async () => {
+    const settings = await database.getBookSettingsByBookTitle(bookTitle);
+    if (settings) {
+      changeFontSize(settings.fontSize + 'px');
+      changeTheme({
+        ...theme,
+        body: {
+          ...theme.body,
+          background: settings.backgroundColor,
+        },
+        '* p': { 'font-family': settings.fontFamily + ' !important' },
+      });
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Reader
@@ -132,8 +147,7 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
           }
         }}
         onReady={() => {
-          // changeFontSize(selectedFontSize + 'px');
-          // changeTheme(defaultTheme);
+          setTheme();
         }}
         menuItems={[]}
       />

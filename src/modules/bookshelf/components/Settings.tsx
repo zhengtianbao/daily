@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import {
   Button,
@@ -14,21 +14,22 @@ import {
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { ReaderState, useReaderStore } from '@/modules/bookshelf/store/reader';
+import { useSettingsStore } from '@/modules/bookshelf/store/settings';
 import { useReader } from '@/vendor/epubjs-react-native/src';
 
-const Settings = () => {
+const Settings = ({ title }: { title: string }) => {
   const isSettingsVisible = useReaderStore((state: ReaderState) => state.isSettingsVisible);
   const setIsSettingsVisible = useReaderStore((state: ReaderState) => state.setIsSettingsVisible);
-
+  const { settings, setSettings, initializeSettings } = useSettingsStore();
   const { changeFontSize, changeTheme, theme } = useReader();
-  const [selectedFont, setSelectedFont] = useState('');
-  const [selectedFontSize, setSelectedFontSize] = useState(20);
-  const [selectedBackground, setSelectedBackground] = useState('#FFFFFF');
+
+  useEffect(() => {
+    initializeSettings(title);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const paperTheme = useTheme();
   const styles = getStyles(paperTheme);
-
-  const defaultTheme = { ...theme, body: { ...theme.body, background: selectedBackground } };
 
   const fonts = [
     'SpaceMono',
@@ -39,37 +40,38 @@ const Settings = () => {
     'DancingScript',
   ];
 
-  const backgroundColors = [
-    '#CCE8CF', // 浅绿色
-    '#F5F5DC', // 米白色
-    '#FFF8DC', // 玉米丝色
-    '#F0F8FF', // 爱丽丝蓝
-    '#FDF5E6', // 老式花边色
-    '#F5F5F5', // 白烟色
-  ];
+  const backgroundColors = ['#CCE8CF', '#F5F5DC', '#FFF8DC', '#F0F8FF', '#FDF5E6', '#F5F5F5'];
 
   const handleFontSelected = (fontName: string) => {
-    setSelectedFont(fontName);
+    setSettings({
+      ...settings,
+      fontFamily: fontName,
+    });
     changeTheme({
-      ...defaultTheme,
+      ...theme,
       '* p': { 'font-family': fontName + ' !important' },
     });
   };
 
   const handleFontSizeChange = (delta: number) => {
-    const newSize = selectedFontSize + delta;
+    const newSize = settings.fontSize + delta;
     if (newSize >= 10 && newSize <= 30) {
-      setSelectedFontSize(newSize);
+      setSettings({
+        ...settings,
+        fontSize: newSize,
+      });
       changeFontSize(newSize.toString() + 'px');
     }
   };
 
   const handleBackgroundSelected = (color: string) => {
-    setSelectedBackground(color);
+    setSettings({
+      ...settings,
+      backgroundColor: color,
+    });
     changeTheme({
       ...theme,
       body: { ...theme.body, background: color },
-      '* p': { 'font-family': selectedFont + ' !important' },
     });
   };
 
@@ -95,9 +97,11 @@ const Settings = () => {
                 style={[
                   styles.backgroundColorCircle,
                   { backgroundColor: color },
-                  selectedBackground === color && styles.selectedBackgroundCircle,
+                  settings.backgroundColor === color && styles.selectedBackgroundCircle,
                 ]}>
-                {selectedBackground === color && <MaterialCommunityIcons name="check" size={20} />}
+                {settings.backgroundColor === color && (
+                  <MaterialCommunityIcons name="check" size={20} />
+                )}
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -111,7 +115,7 @@ const Settings = () => {
             {fonts.map((font, index) => (
               <Button
                 key={index}
-                mode={selectedFont === font ? 'contained' : 'outlined'}
+                mode={settings.fontFamily === font ? 'contained' : 'outlined'}
                 onPress={() => handleFontSelected(font)}
                 style={styles.fontButton}>
                 {font}
@@ -134,15 +138,15 @@ const Settings = () => {
                 />
               )}
               mode="outlined"
-              disabled={selectedFontSize <= 10}
+              disabled={settings.fontSize <= 10}
               onPress={() => handleFontSizeChange(-2)}
               style={[
                 styles.fontSizeChangeButton,
-                selectedFontSize <= 10 && styles.disabledFontSizeChangeButton,
+                settings.fontSize <= 10 && styles.disabledFontSizeChangeButton,
               ]}></IconButton>
 
             <View style={styles.progressBarWrapper}>
-              <ProgressBar progress={(selectedFontSize - 10) / 20} style={styles.progressBar} />
+              <ProgressBar progress={(settings.fontSize - 10) / 20} style={styles.progressBar} />
             </View>
 
             <IconButton
@@ -154,11 +158,11 @@ const Settings = () => {
                 />
               )}
               mode="outlined"
-              disabled={selectedFontSize >= 30}
+              disabled={settings.fontSize >= 30}
               onPress={() => handleFontSizeChange(2)}
               style={[
                 styles.fontSizeChangeButton,
-                selectedFontSize >= 30 && styles.disabledFontSizeChangeButton,
+                settings.fontSize >= 30 && styles.disabledFontSizeChangeButton,
               ]}></IconButton>
           </View>
         </View>

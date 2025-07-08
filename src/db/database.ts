@@ -12,6 +12,14 @@ export type Book = {
   progress: number;
 };
 
+export type BookSettings = {
+  id?: number;
+  bookId: number;
+  backgroundColor: string;
+  fontFamily: string;
+  fontSize: number;
+};
+
 export class Database {
   private db: SQLite.SQLiteDatabase | null = null;
 
@@ -43,6 +51,14 @@ export class Database {
         currentLocation TEXT NULL, 
         progress INTEGER DEFAULT 0
       );
+      CREATE TABLE IF NOT EXISTS book_settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        bookId INTEGER NOT NULL,
+        backgroundColor TEXT NOT NULL,
+        fontFamily TEXT NOT NULL,
+        fontSize INTEGER NOT NULL,
+        FOREIGN KEY (bookId) REFERENCES books(id)
+      );
     `);
   }
 
@@ -67,6 +83,16 @@ export class Database {
           book.currentLocation || null,
           book.progress || 0,
         ]
+      );
+
+      if (!result) {
+        throw new Error('Failed to insert book');
+      }
+
+      await this.db.runAsync(
+        `INSERT INTO book_settings (bookId, backgroundColor, fontFamily, fontSize)
+         VALUES (?, ?, ?, ?)`,
+        [result.lastInsertRowId, 'white', 'serif', 20]
       );
 
       console.log('Book inserted successfully');
@@ -164,10 +190,59 @@ export class Database {
         throw new Error(`Book '${title}' not found.`);
       }
 
+      await this.db.runAsync(
+        `DELETE FROM book_settings WHERE bookId = (SELECT id FROM books WHERE title = ?)`,
+        [title]
+      );
+
       await this.db.runAsync('DELETE FROM books WHERE title = ?', [title]);
       console.log(`Book '${title}' and associated data successfully deleted.`);
     } catch (error) {
       console.error(`Error deleting book '${title}':`, error);
+      throw error;
+    }
+  }
+
+  async getBookSettingsByBookTitle(title: string): Promise<BookSettings | null> {
+    if (!this.db) throw new Error('Database not initialized. Call initialize() first.');
+
+    try {
+      const query = `SELECT * FROM book_settings
+                     WHERE bookId = (SELECT id FROM books WHERE title = ?)`;
+      const result = await this.db.getFirstAsync<any>(query, [title]);
+      if (!result) {
+        return null;
+      }
+      console.log(result);
+      return {
+        id: result.id,
+        bookId: result.bookId,
+        backgroundColor: result.backgroundColor,
+        fontFamily: result.fontFamily,
+        fontSize: result.fontSize,
+      };
+    } catch (error) {
+      console.error('Error getting book settings by book title:', error);
+      throw error;
+    }
+  }
+
+  async updateBookSettingsByBookTitle(
+    title: string,
+    backgroundColor: string,
+    fontFamily: string,
+    fontSize: number
+  ): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized. Call initialize() first.');
+
+    try {
+      const query = `UPDATE book_settings
+                     SET backgroundColor = ?, fontFamily = ?, fontSize = ?
+                     WHERE bookId = (SELECT id FROM books WHERE title = ?)`;
+      await this.db.runAsync(query, [backgroundColor, fontFamily, fontSize, title]);
+      console.log('Book settings updated successfully');
+    } catch (error) {
+      console.error('Error updating book settings:', error);
       throw error;
     }
   }

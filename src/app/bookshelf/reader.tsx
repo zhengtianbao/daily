@@ -24,7 +24,7 @@ const Reader = () => {
 
       <EpubReader bookTitle={bookTitle} bookUri={bookUri}></EpubReader>
 
-      {isSettingsVisible && <Settings></Settings>}
+      {isSettingsVisible && <Settings title={bookTitle}></Settings>}
 
       {isAssistantVisible && <Assistant></Assistant>}
     </SafeAreaView>
