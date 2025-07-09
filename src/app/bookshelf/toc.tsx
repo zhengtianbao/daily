@@ -22,7 +22,6 @@ const TableOfContents = () => {
 
   const dfs = (sections: SectionType[]) => {
     const result: tree = [];
-
     sections.forEach(section => {
       const node: extendedNode = {
         id: section.id,
@@ -31,20 +30,25 @@ const TableOfContents = () => {
         label: section.label.trim(),
         children: [],
       };
-
       if (section.subitems.length > 0) {
         node.children = dfs(section.subitems);
       }
-
       result.push(node);
     });
-
     return result;
   };
 
   const tree = dfs(toc);
-
-  console.log(section);
+  let currentSectionNode: node = {
+    label: '',
+    children: [],
+  };
+  if (section) {
+    currentSectionNode = {
+      label: section.label.trim(),
+      children: [],
+    };
+  }
   return (
     <View>
       <Appbar.Header mode="center-aligned">
@@ -57,8 +61,13 @@ const TableOfContents = () => {
       </Appbar.Header>
       <TreeView
         tree={tree}
+        currentItem={currentSectionNode}
         onItemPress={item => {
-          goToLocation(item.href.split('/')[1]);
+          if (item.href.includes('/')) {
+            goToLocation(item.href.split('/')[1]);
+          } else {
+            goToLocation(item.href);
+          }
           router.back();
         }}
       />
