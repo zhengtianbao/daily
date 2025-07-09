@@ -38,6 +38,7 @@ const RootNavigation = () => {
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="bookshelf/toc" options={{ headerShown: false }} />
       <Stack.Screen name="bookshelf/reader" options={{ headerShown: false }} />
     </Stack>
   );

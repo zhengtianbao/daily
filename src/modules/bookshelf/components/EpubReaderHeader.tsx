@@ -12,8 +12,7 @@ const EpubReaderHeader = ({ title }: { title: string }) => {
   const setIsSettingsVisible = useReaderStore((state: ReaderState) => state.setIsSettingsVisible);
 
   return (
-    <Appbar.Header style={styles.appBar}>
-      <Appbar.Content title={title} />
+    <Appbar.Header mode="center-aligned" style={styles.appBar}>
       <Appbar.BackAction
         onPress={() => {
           setIsSettingsVisible(false);
@@ -22,7 +21,20 @@ const EpubReaderHeader = ({ title }: { title: string }) => {
         }}
       />
       <Appbar.Action
+        icon="format-list-bulleted-square"
+        animated={false}
+        onPress={() => {
+          router.navigate({
+            pathname: '/bookshelf/toc',
+            params: { bookTitle: title },
+          });
+        }}
+      />
+      <Appbar.Content title={title} />
+      <Appbar.Action icon="bookmark" animated={false} onPress={() => {}} />
+      <Appbar.Action
         icon={({ size, color }) => <FontAwesome name="gear" size={size} color={color} />}
+        animated={false}
         onPress={() => setIsSettingsVisible(true)}
       />
     </Appbar.Header>
