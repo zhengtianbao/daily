@@ -5,6 +5,7 @@ import { Icon } from 'react-native-paper';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export interface node {
+  [x: string]: any;
   label: string;
   children: node[];
 }

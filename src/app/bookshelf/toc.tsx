@@ -58,7 +58,6 @@ const TableOfContents = () => {
       <TreeView
         tree={tree}
         onItemPress={item => {
-          console.log(item);
           goToLocation(item.href.split('/')[1]);
           router.back();
         }}
