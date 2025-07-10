@@ -127,6 +127,7 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
         height={height}
         fileSystem={useFileSystem}
         initialLocation={initialLocation}
+        waitForLocationsReady={true}
         onLocationChange={handleLocationChange}
         enableSelection={false}
         enableSwipe={true}
