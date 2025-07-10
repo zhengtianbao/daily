@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Icon } from 'react-native-paper';
 
@@ -18,49 +18,56 @@ interface FlatListItem {
   depth: number;
   isExpanded: boolean;
   hasChildren: boolean;
-  isCurrentItem: boolean | undefined;
+  isCurrentItem: boolean;
 }
 
-const TreeView = ({
-  tree,
-  onItemPress,
-  currentItem,
-}: {
+interface TreeViewProps {
   tree: tree;
   onItemPress: (node: node) => void;
-  currentItem?: node;
-}) => {
+  currentItem: node;
+}
+
+const TreeView = ({ tree, onItemPress, currentItem }: TreeViewProps) => {
   const flatListRef = useRef<FlatList>(null);
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [flatData, setFlatData] = useState<FlatListItem[]>([]);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const hasScrolledToCurrentItem = useRef(false);
 
-  const generateId = (node: node, depth: number, parentId?: string): string => {
+  function generateId(node: node, depth: number, parentId?: string): string {
     return parentId ? `${parentId}-${node.label}-${depth}` : `${node.label}-${depth}`;
-  };
+  }
 
-  const containsCurrentItem = (node: node): boolean => {
-    if (!currentItem) return false;
-    if (node.label === currentItem.label) return true;
-    if (node.children && node.children.length > 0) {
-      return node.children.some(child => containsCurrentItem(child));
+  function containsCurrentItem(node: node, current: node): boolean {
+    if (node.label === current.label) return true;
+    if (node.children?.length > 0) {
+      return node.children.some(child => containsCurrentItem(child, current));
     }
     return false;
-  };
+  }
+
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(() => {
+    const initialExpanded = new Set<string>();
+
+    const addExpandedPaths = (nodes: tree, depth: number = 1, parentId?: string) => {
+      nodes.forEach(node => {
+        const id = generateId(node, depth, parentId);
+        if (containsCurrentItem(node, currentItem)) {
+          initialExpanded.add(id);
+        }
+        if (node.children?.length > 0) {
+          addExpandedPaths(node.children, depth + 1, id);
+        }
+      });
+    };
+
+    addExpandedPaths(tree);
+    return initialExpanded;
+  });
 
   const flattenTree = (nodes: tree, depth: number = 1, parentId?: string): FlatListItem[] => {
     const result: FlatListItem[] = [];
 
     nodes.forEach(node => {
       const id = generateId(node, depth, parentId);
-      const hasChildren = node.children && node.children.length > 0;
-      const isCurrentItem = currentItem && node.label === currentItem.label;
-
-      if (currentItem && containsCurrentItem(node)) {
-        expandedItems.add(id);
-      }
-
+      const hasChildren = Boolean(node.children?.length);
+      const isCurrentItem = node.label === currentItem.label;
       const isExpanded = expandedItems.has(id);
 
       result.push({
@@ -80,25 +87,15 @@ const TreeView = ({
     return result;
   };
 
-  const updateFlatData = () => {
-    const newFlatData = flattenTree(tree);
-    setFlatData(newFlatData);
+  const flatData = useMemo(() => {
+    return flattenTree(tree);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tree, expandedItems, currentItem]);
 
-    if (currentItem && (isInitialLoad || !hasScrolledToCurrentItem.current)) {
-      const currentIndex = newFlatData.findIndex(item => item.isCurrentItem);
-      if (currentIndex !== -1) {
-        setTimeout(() => {
-          flatListRef.current?.scrollToIndex({
-            index: currentIndex,
-            animated: true,
-            viewPosition: 0.3,
-          });
-          hasScrolledToCurrentItem.current = true;
-          setIsInitialLoad(false);
-        }, 100);
-      }
-    }
-  };
+  const initialScrollIndex = useMemo(() => {
+    const currentIndex = flatData.findIndex(item => item.isCurrentItem);
+    return currentIndex !== -1 ? currentIndex : 0;
+  }, [flatData]);
 
   const handleToggle = (id: string) => {
     setExpandedItems(prev => {
@@ -112,64 +109,50 @@ const TreeView = ({
     });
   };
 
-  useEffect(() => {
-    updateFlatData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tree, currentItem, expandedItems]);
-
-  useEffect(() => {
-    hasScrolledToCurrentItem.current = false;
-  }, [currentItem]);
-
   const renderItem = ({ item }: { item: FlatListItem }) => {
     const { node, depth, isExpanded, hasChildren, isCurrentItem } = item;
 
     const itemStyle = [styles.item, isCurrentItem && styles.selectedItem];
-
     const textStyle = [styles.content, isCurrentItem && styles.selectedText];
 
     return (
-      <View>
-        {hasChildren && isExpanded && (
-          <TouchableOpacity onPress={() => handleToggle(item.id)}>
-            <View style={itemStyle}>
-              <View style={{ width: depth * 10 }} />
-              <View style={styles.icon}>
-                <Icon source={() => <FontAwesome name="caret-down" size={20} />} size={20} />
-              </View>
-              <Text style={textStyle}>{node.label}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-        {hasChildren && !isExpanded && (
-          <TouchableOpacity onPress={() => handleToggle(item.id)}>
-            <View style={itemStyle}>
-              <View style={{ width: depth * 10 }} />
-              <View style={styles.icon}>
-                <Icon source={() => <FontAwesome name="caret-right" size={24} />} size={24} />
-              </View>
-              <Text style={textStyle}>{node.label}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-        {!hasChildren && (
-          <TouchableOpacity onPress={() => onItemPress(node)}>
-            <View style={itemStyle}>
-              <View style={{ width: depth * 10 }} />
-              <View style={styles.icon} />
-              <Text style={textStyle}>{node.label}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      </View>
+      <TouchableOpacity
+        onPress={() => (hasChildren ? handleToggle(item.id) : onItemPress(node))}
+        activeOpacity={0.7}>
+        <View style={itemStyle}>
+          <View style={{ width: depth * 10 }} />
+          <View style={styles.icon}>
+            {hasChildren && (
+              <Icon
+                source={() => (
+                  <FontAwesome name={isExpanded ? 'caret-down' : 'caret-right'} size={20} />
+                )}
+                size={20}
+              />
+            )}
+          </View>
+          <Text style={textStyle}>{node.label}</Text>
+        </View>
+      </TouchableOpacity>
     );
   };
 
-  const getItemLayout = (data: any, index: number) => ({
+  const getItemLayout = (_: any, index: number) => ({
     length: 50,
     offset: 50 * index,
     index,
   });
+
+  const handleScrollToIndexFailed = (info: { index: number }) => {
+    const wait = new Promise(resolve => setTimeout(resolve, 500));
+    wait.then(() => {
+      flatListRef.current?.scrollToIndex({
+        index: info.index,
+        animated: true,
+        viewPosition: 0.3,
+      });
+    });
+  };
 
   return (
     <FlatList
@@ -178,16 +161,8 @@ const TreeView = ({
       renderItem={renderItem}
       keyExtractor={item => item.id}
       getItemLayout={getItemLayout}
-      onScrollToIndexFailed={info => {
-        const wait = new Promise(resolve => setTimeout(resolve, 500));
-        wait.then(() => {
-          flatListRef.current?.scrollToIndex({
-            index: info.index,
-            animated: true,
-            viewPosition: 0.3,
-          });
-        });
-      }}
+      initialScrollIndex={initialScrollIndex}
+      onScrollToIndexFailed={handleScrollToIndexFailed}
     />
   );
 };
@@ -196,7 +171,9 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 5,
+    minHeight: 50,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
   selectedItem: {
     backgroundColor: '#e3f2fd',
@@ -208,6 +185,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 20,
     lineHeight: 30,
+    flex: 1,
   },
   selectedText: {
     color: '#1976d2',
