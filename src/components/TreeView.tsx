@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Icon } from 'react-native-paper';
 
@@ -28,8 +28,6 @@ interface TreeViewProps {
 }
 
 const TreeView = ({ tree, onItemPress, currentItem }: TreeViewProps) => {
-  const flatListRef = useRef<FlatList>(null);
-
   function generateId(node: node, depth: number, parentId?: string): string {
     return parentId ? `${parentId}-${node.label}-${depth}` : `${node.label}-${depth}`;
   }
@@ -92,11 +90,6 @@ const TreeView = ({ tree, onItemPress, currentItem }: TreeViewProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tree, expandedItems, currentItem]);
 
-  const initialScrollIndex = useMemo(() => {
-    const currentIndex = flatData.findIndex(item => item.isCurrentItem);
-    return currentIndex !== -1 ? currentIndex : 0;
-  }, [flatData]);
-
   const handleToggle = (id: string) => {
     setExpandedItems(prev => {
       const newSet = new Set(prev);
@@ -137,34 +130,7 @@ const TreeView = ({ tree, onItemPress, currentItem }: TreeViewProps) => {
     );
   };
 
-  const getItemLayout = (_: any, index: number) => ({
-    length: 50,
-    offset: 50 * index,
-    index,
-  });
-
-  const handleScrollToIndexFailed = (info: { index: number }) => {
-    const wait = new Promise(resolve => setTimeout(resolve, 500));
-    wait.then(() => {
-      flatListRef.current?.scrollToIndex({
-        index: info.index,
-        animated: true,
-        viewPosition: 0.3,
-      });
-    });
-  };
-
-  return (
-    <FlatList
-      ref={flatListRef}
-      data={flatData}
-      renderItem={renderItem}
-      keyExtractor={item => item.id}
-      getItemLayout={getItemLayout}
-      initialScrollIndex={initialScrollIndex}
-      onScrollToIndexFailed={handleScrollToIndexFailed}
-    />
-  );
+  return <FlatList data={flatData} renderItem={renderItem} keyExtractor={item => item.id} />;
 };
 
 const styles = StyleSheet.create({
