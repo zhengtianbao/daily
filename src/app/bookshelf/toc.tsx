@@ -18,8 +18,6 @@ const TableOfContents = () => {
   }>();
   const { toc, section, goToLocation } = useReader();
 
-  console.log(section);
-
   const dfs = (sections: SectionType[]) => {
     const result: tree = [];
     sections.forEach(section => {
@@ -39,6 +37,7 @@ const TableOfContents = () => {
   };
 
   const tree = dfs(toc);
+
   let currentSectionNode: node = {
     label: '',
     children: [],
@@ -49,6 +48,7 @@ const TableOfContents = () => {
       children: [],
     };
   }
+
   return (
     <View>
       <Appbar.Header mode="center-aligned">
