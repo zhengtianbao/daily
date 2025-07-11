@@ -41,7 +41,8 @@ export class Database {
   async createTables(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized. Call initialize() first.');
 
-    await this.db.execAsync(`
+    try {
+      await this.db.execAsync(`
       CREATE TABLE IF NOT EXISTS books (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
@@ -69,6 +70,10 @@ export class Database {
         FOREIGN KEY (bookId) REFERENCES books(id)
       );
     `);
+    } catch (error) {
+      console.error('Error creating tables:', error);
+      throw error;
+    }
   }
 
   async insertBook(book: Book): Promise<number> {
@@ -78,6 +83,7 @@ export class Database {
     if (bookExist !== null) {
       return 0;
     }
+
     try {
       const result = await this.db.runAsync(
         `INSERT INTO books (title, author, uri, cover, updateDate, lastreadDate, currentLocation, progress)
@@ -187,7 +193,12 @@ export class Database {
   async updateBookProgress(title: string, progress: number): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
-    await this.db.runAsync(`UPDATE books SET progress = ? WHERE title = ?`, [progress, title]);
+    try {
+      await this.db.runAsync(`UPDATE books SET progress = ? WHERE title = ?`, [progress, title]);
+    } catch (error) {
+      console.error('Error updating book progress:', error);
+      throw error;
+    }
   }
 
   async deleteBook(title: string): Promise<void> {
@@ -199,12 +210,20 @@ export class Database {
         throw new Error(`Book '${title}' not found.`);
       }
 
-      await this.db.runAsync(
-        `DELETE FROM book_settings WHERE bookId = (SELECT id FROM books WHERE title = ?)`,
-        [title]
-      );
+      await this.db.withTransactionAsync(async () => {
+        await this.db!.runAsync(
+          `DELETE FROM bookmarks WHERE bookId = (SELECT id FROM books WHERE title = ?)`,
+          [title]
+        );
 
-      await this.db.runAsync('DELETE FROM books WHERE title = ?', [title]);
+        await this.db!.runAsync(
+          `DELETE FROM book_settings WHERE bookId = (SELECT id FROM books WHERE title = ?)`,
+          [title]
+        );
+
+        await this.db!.runAsync('DELETE FROM books WHERE title = ?', [title]);
+      });
+
       console.log(`Book '${title}' and associated data successfully deleted.`);
     } catch (error) {
       console.error(`Error deleting book '${title}':`, error);
@@ -297,6 +316,14 @@ export class Database {
     } catch (error) {
       console.error('Error deleting bookmark:', error);
       throw error;
+    }
+  }
+
+  async close(): Promise<void> {
+    if (this.db) {
+      await this.db.closeAsync();
+      this.db = null;
+      console.log('Database connection closed');
     }
   }
 }
