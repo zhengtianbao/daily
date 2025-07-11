@@ -1,5 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 
+import { Bookmark } from '@/vendor/epubjs-react-native/src';
+
 export type Book = {
   id?: number;
   title: string;
@@ -57,6 +59,13 @@ export class Database {
         backgroundColor TEXT NOT NULL,
         fontFamily TEXT NOT NULL,
         fontSize INTEGER NOT NULL,
+        FOREIGN KEY (bookId) REFERENCES books(id)
+      );
+      CREATE TABLE IF NOT EXISTS bookmarks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        bookId INTEGER NOT NULL,
+        bookmarkId TEXT NOT NULL,
+        bookmark TEXT NOT NULL,
         FOREIGN KEY (bookId) REFERENCES books(id)
       );
     `);
@@ -243,6 +252,50 @@ export class Database {
       console.log('Book settings updated successfully');
     } catch (error) {
       console.error('Error updating book settings:', error);
+      throw error;
+    }
+  }
+
+  async getBookmarksByBookTitle(title: string): Promise<Bookmark[]> {
+    if (!this.db) throw new Error('Database not initialized. Call initialize() first.');
+
+    try {
+      const query = `SELECT * FROM bookmarks
+                     WHERE bookId = (SELECT id FROM books WHERE title = ?)`;
+      const result = await this.db.getAllAsync<any>(query, [title]);
+      return result.map((row: any) => JSON.parse(row.bookmark) as Bookmark);
+    } catch (error) {
+      console.error('Error getting bookmarks by book title:', error);
+      throw error;
+    }
+  }
+
+  async addBookmarkByBookTitle(title: string, bookmark: Bookmark): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized. Call initialize() first.');
+
+    try {
+      await this.db.runAsync(
+        `INSERT INTO bookmarks (bookId, bookmarkId, bookmark) VALUES ((SELECT id FROM books WHERE title = ?), ?, ?)`,
+        [title, bookmark.id, JSON.stringify(bookmark)]
+      );
+      console.log('Bookmark added successfully');
+    } catch (error) {
+      console.error('Error adding bookmark:', error);
+      throw error;
+    }
+  }
+
+  async deleteBookmarkByBookTitleAndBookmarkId(title: string, bookmarkId: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized. Call initialize() first.');
+
+    try {
+      await this.db.runAsync(
+        `DELETE FROM bookmarks WHERE bookId = (SELECT id FROM books WHERE title = ?) AND bookmarkId = ?`,
+        [title, bookmarkId]
+      );
+      console.log('Bookmark deleted successfully');
+    } catch (error) {
+      console.error('Error deleting bookmark:', error);
       throw error;
     }
   }

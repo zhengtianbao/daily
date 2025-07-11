@@ -1,5 +1,5 @@
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Appbar, IconButton, MD3Colors, Text } from 'react-native-paper';
+import { Appbar, IconButton, Text } from 'react-native-paper';
 
 import { router, useLocalSearchParams } from 'expo-router';
 
@@ -48,7 +48,7 @@ const BookMarks = () => {
                   style={{
                     marginBottom: 2,
                   }}>
-                  Chapter: {bookmark.section?.label}
+                  Chapter: {bookmark.section?.label.trim()}
                 </Text>
 
                 <Text
@@ -64,7 +64,6 @@ const BookMarks = () => {
             <IconButton
               icon="trash-can-outline"
               size={20}
-              iconColor={MD3Colors.error50}
               onPress={() => {
                 removeBookmark(bookmark);
               }}

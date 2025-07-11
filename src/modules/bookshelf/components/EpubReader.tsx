@@ -5,7 +5,7 @@ import { useFileSystem } from '@epubjs-react-native/expo-file-system';
 
 import { database } from '@/db/database';
 import { ReaderState, useReaderStore } from '@/modules/bookshelf/store/reader';
-import { Location, Reader, useReader } from '@/vendor/epubjs-react-native/src';
+import { Bookmark, Location, Reader, useReader } from '@/vendor/epubjs-react-native/src';
 
 const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string }) => {
   const setIsAppBarVisible = useReaderStore((state: ReaderState) => state.setIsAppBarVisible);
@@ -15,6 +15,7 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
   const setPressAt = useReaderStore((state: ReaderState) => state.setPressAt);
 
   const [initialLocation, setInitialLocation] = useState<string | undefined>(undefined);
+  const [initialBookmarks, setInitialBookmarks] = useState<Bookmark[] | undefined>(undefined);
   const [readingProgress, setReadingProgress] = useState(0);
 
   const { width, height } = useWindowDimensions();
@@ -72,6 +73,22 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
     }
   };
 
+  const handleAddBookmark = async (bookmark: Bookmark) => {
+    try {
+      await database.addBookmarkByBookTitle(bookTitle, bookmark);
+    } catch (error) {
+      console.error('Error adding bookmark:', error);
+    }
+  };
+
+  const handleRemoveBookmakr = async (bookmark: Bookmark) => {
+    try {
+      await database.deleteBookmarkByBookTitleAndBookmarkId(bookTitle, bookmark.id.toString());
+    } catch (error) {
+      console.error('Error removing bookmark:', error);
+    }
+  };
+
   const onWordSelected = async (
     selection: string,
     cfiRange: string,
@@ -99,6 +116,8 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
       if (book?.progress !== undefined) {
         setReadingProgress(book.progress);
       }
+      const bookmarks = await database.getBookmarksByBookTitle(bookTitle);
+      setInitialBookmarks(bookmarks);
     };
 
     initializeBook();
@@ -151,6 +170,9 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
           setTheme();
         }}
         menuItems={[]}
+        initialBookmarks={initialBookmarks}
+        onAddBookmark={handleAddBookmark}
+        onRemoveBookmark={handleRemoveBookmakr}
       />
     </View>
   );
