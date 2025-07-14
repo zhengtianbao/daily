@@ -19,7 +19,7 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
   const [readingProgress, setReadingProgress] = useState(0);
 
   const { width, height } = useWindowDimensions();
-  const { changeTheme, changeFontSize, theme } = useReader();
+  const { changeTheme, changeFontSize, goToLocation, theme } = useReader();
   const disableTextSelectionTimeout = useRef<NodeJS.Timeout>();
 
   const disableTextSelectionTemporarily = () => {
@@ -145,7 +145,6 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
         width={width}
         height={height}
         fileSystem={useFileSystem}
-        initialLocation={initialLocation}
         waitForLocationsReady={true}
         onLocationChange={handleLocationChange}
         enableSelection={false}
@@ -168,6 +167,11 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
         }}
         onReady={() => {
           setTheme();
+        }}
+        onLocationsReady={() => {
+          if (initialLocation) {
+            goToLocation(initialLocation);
+          }
         }}
         menuItems={[]}
         initialBookmarks={initialBookmarks}
