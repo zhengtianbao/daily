@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
-import { Appbar, Button, Menu, Modal, Portal, Searchbar, Snackbar, Text } from 'react-native-paper';
+import { Appbar, Button, Modal, Portal, Searchbar, Snackbar, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatGrid } from 'react-native-super-grid';
 
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import { router } from 'expo-router';
-
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 import { Book, database } from '@/db/database';
 import { getEpubMetadataFromFile } from '@/utils/epubHelpers';
@@ -18,7 +16,6 @@ const BookPlaceholderImage = require('@/assets/images/cover-default-book.png');
 const Bookshelf = () => {
   const [isSearchBarVisible, setIsSearchBarVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [books, setBooks] = useState<Book[]>([]);
   const [isSnackbarVisible, setIsSnackbarVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -77,7 +74,6 @@ const Bookshelf = () => {
       console.error('Error importing book:', error);
       showSnackBar('Book import failed!');
     }
-    setIsMenuVisible(false);
   };
 
   const removeBook = async (book: Book) => {
@@ -142,18 +138,7 @@ const Bookshelf = () => {
         <Appbar.Header>
           <Appbar.Content title="Bookshelf" />
           <Appbar.Action icon="magnify" onPress={() => setIsSearchBarVisible(true)} />
-          <Menu
-            visible={isMenuVisible}
-            onDismiss={() => setIsMenuVisible(false)}
-            anchor={<Appbar.Action icon="dots-vertical" onPress={() => setIsMenuVisible(true)} />}>
-            <Menu.Item
-              leadingIcon={({ size, color }) => (
-                <FontAwesome6 name="file-import" size={size} color={color} />
-              )}
-              onPress={importBook}
-              title="Import book"
-            />
-          </Menu>
+          <Appbar.Action icon="file-import-outline" onPress={importBook} />
         </Appbar.Header>
       ) : (
         <Appbar.Header>
