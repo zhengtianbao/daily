@@ -14,6 +14,7 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
   const setSelectedSentence = useReaderStore((state: ReaderState) => state.setSelectedSentence);
   const setPressAt = useReaderStore((state: ReaderState) => state.setPressAt);
 
+  const [isBookInitialized, setIsBookInitialized] = useState(false);
   const [initialLocation, setInitialLocation] = useState<string | undefined>(undefined);
   const [initialBookmarks, setInitialBookmarks] = useState<Bookmark[] | undefined>(undefined);
   const [readingProgress, setReadingProgress] = useState(0);
@@ -118,10 +119,11 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
       }
       const bookmarks = await database.getBookmarksByBookTitle(bookTitle);
       setInitialBookmarks(bookmarks);
+      setIsBookInitialized(true);
     };
 
     initializeBook();
-  }, [bookTitle]);
+  }, []);
 
   const setTheme = async () => {
     const settings = await database.getBookSettingsByBookTitle(bookTitle);
@@ -138,51 +140,56 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <Reader
-        src={bookUri}
-        width={width}
-        height={height}
-        fileSystem={useFileSystem}
-        waitForLocationsReady={true}
-        onLocationChange={handleLocationChange}
-        enableSelection={false}
-        enableSwipe={true}
-        onSwipeUp={() => {
-          disableTextSelectionTemporarily();
-          setIsAppBarVisible(false);
-        }}
-        onSwipeDown={() => {
-          disableTextSelectionTemporarily();
-          setIsAppBarVisible(true);
-        }}
-        onSwipeLeft={disableTextSelectionTemporarily}
-        onSwipeRight={disableTextSelectionTemporarily}
-        onSelected={onWordSelected}
-        onLongPress={e => {
-          if (e) {
-            setPressAt(e.absoluteY);
-          }
-        }}
-        onLocationsReady={() => {
-          setTheme();
-          if (initialLocation) {
-            goToLocation(initialLocation);
-          }
-        }}
-        menuItems={[]}
-        initialBookmarks={initialBookmarks}
-        onAddBookmark={handleAddBookmark}
-        onRemoveBookmark={handleRemoveBookmakr}
-        onWebViewMessage={message => {
-          if (message.type === 'onCfiFromPercentage') {
-            goToLocation(message.cfi);
-          }
-        }}
-      />
-    </View>
-  );
+  if (!isBookInitialized) {
+    return <View />;
+  } else {
+    return (
+      <View style={styles.container}>
+        <Reader
+          src={bookUri}
+          width={width}
+          height={height}
+          fileSystem={useFileSystem}
+          waitForLocationsReady={true}
+          onLocationChange={handleLocationChange}
+          enableSelection={false}
+          enableSwipe={true}
+          onSwipeUp={() => {
+            disableTextSelectionTemporarily();
+            setIsAppBarVisible(false);
+          }}
+          onSwipeDown={() => {
+            disableTextSelectionTemporarily();
+            setIsAppBarVisible(true);
+          }}
+          onSwipeLeft={disableTextSelectionTemporarily}
+          onSwipeRight={disableTextSelectionTemporarily}
+          onSelected={onWordSelected}
+          onLongPress={e => {
+            if (e) {
+              setPressAt(e.absoluteY);
+            }
+          }}
+          onLocationsReady={() => {
+            setTheme().then(() => {
+              if (initialLocation) {
+                goToLocation(initialLocation);
+              }
+            });
+          }}
+          menuItems={[]}
+          initialBookmarks={initialBookmarks}
+          onAddBookmark={handleAddBookmark}
+          onRemoveBookmark={handleRemoveBookmakr}
+          onWebViewMessage={message => {
+            if (message.type === 'onCfiFromPercentage') {
+              goToLocation(message.cfi);
+            }
+          }}
+        />
+      </View>
+    );
+  }
 };
 
 const styles = StyleSheet.create({
