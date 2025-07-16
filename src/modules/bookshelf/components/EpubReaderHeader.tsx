@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { Appbar } from 'react-native-paper';
 
@@ -13,6 +14,14 @@ const EpubReaderHeader = ({ title }: { title: string }) => {
   const setIsSettingsVisible = useReaderStore((state: ReaderState) => state.setIsSettingsVisible);
 
   const { bookmarks, isBookmarked, addBookmark, removeBookmark, getCurrentLocation } = useReader();
+
+  useEffect(() => {
+    return () => {
+      setIsSettingsVisible(false);
+      setIsAppBarVisible(false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleChangeBookmark = () => {
     const location = getCurrentLocation();
@@ -38,8 +47,6 @@ const EpubReaderHeader = ({ title }: { title: string }) => {
     <Appbar.Header mode="center-aligned" style={styles.appBar}>
       <Appbar.BackAction
         onPress={() => {
-          setIsSettingsVisible(false);
-          setIsAppBarVisible(false);
           router.back();
         }}
       />
