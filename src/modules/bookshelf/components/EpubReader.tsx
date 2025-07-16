@@ -165,10 +165,8 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
             setPressAt(e.absoluteY);
           }
         }}
-        onReady={() => {
-          setTheme();
-        }}
         onLocationsReady={() => {
+          setTheme();
           if (initialLocation) {
             goToLocation(initialLocation);
           }
