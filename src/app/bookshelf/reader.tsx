@@ -4,6 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 
 import Assistant from '@/modules/bookshelf/components/Assistant';
 import EpubReader from '@/modules/bookshelf/components/EpubReader';
+import EpubReaderFooter from '@/modules/bookshelf/components/EpubReaderFooter';
 import EpubReaderHeader from '@/modules/bookshelf/components/EpubReaderHeader';
 import Settings from '@/modules/bookshelf/components/Settings';
 import { ReaderState, useReaderStore } from '@/modules/bookshelf/store/reader';
@@ -23,6 +24,8 @@ const Reader = () => {
       {isAppBarVisible && <EpubReaderHeader title={bookTitle}></EpubReaderHeader>}
 
       <EpubReader bookTitle={bookTitle} bookUri={bookUri}></EpubReader>
+
+      {isAppBarVisible && <EpubReaderFooter title={bookTitle}></EpubReaderFooter>}
 
       {isSettingsVisible && <Settings title={bookTitle}></Settings>}
 

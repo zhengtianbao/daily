@@ -175,6 +175,11 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
         initialBookmarks={initialBookmarks}
         onAddBookmark={handleAddBookmark}
         onRemoveBookmark={handleRemoveBookmakr}
+        onWebViewMessage={message => {
+          if (message.type === 'onCfiFromPercentage') {
+            goToLocation(message.cfi);
+          }
+        }}
       />
     </View>
   );
