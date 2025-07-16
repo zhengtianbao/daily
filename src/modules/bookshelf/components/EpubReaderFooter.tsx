@@ -1,5 +1,7 @@
 import { StyleSheet, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { IconButton, Text } from 'react-native-paper';
+
+import { router } from 'expo-router';
 
 import Slider from '@react-native-community/slider';
 import { debounce } from 'lodash';
@@ -24,25 +26,46 @@ const EpubReaderFooter = ({ title }: { title: string }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.row}>
-        <Text variant="labelMedium">Percentage: </Text>
-
-        <Slider
-          style={styles.slider}
-          disabled={totalLocations === 0}
-          value={(currentLocation?.start.percentage || 0) * 100}
-          minimumValue={0}
-          maximumValue={100}
-          minimumTrackTintColor="#c0c0c0"
-          maximumTrackTintColor="#000000"
-          step={1}
-          tapToSeek
-          onValueChange={(percentage: number) => debounced(percentage)}
+      <View style={styles.footerContainer}>
+        <IconButton
+          icon="format-list-bulleted-square"
+          onPress={() => {
+            router.navigate({
+              pathname: '/bookshelf/toc',
+              params: { bookTitle: title },
+            });
+          }}
+          style={styles.iconButton}
         />
 
-        <Text variant="labelMedium">
-          {((currentLocation?.start.percentage || 0) * 100).toFixed(0)}%
-        </Text>
+        <View style={styles.sliderContainer}>
+          <Slider
+            style={styles.slider}
+            disabled={totalLocations === 0}
+            value={(currentLocation?.start.percentage || 0) * 100}
+            minimumValue={0}
+            maximumValue={100}
+            minimumTrackTintColor="#c0c0c0"
+            maximumTrackTintColor="#000000"
+            step={1}
+            tapToSeek
+            onValueChange={(percentage: number) => debounced(percentage)}
+          />
+          <Text variant="labelMedium">
+            {((currentLocation?.start.percentage || 0) * 100).toFixed(0)}%
+          </Text>
+        </View>
+
+        <IconButton
+          icon="bookmark-multiple"
+          onPress={() => {
+            router.navigate({
+              pathname: '/bookshelf/bookmarks',
+              params: { bookTitle: title },
+            });
+          }}
+          style={styles.iconButton}
+        />
       </View>
     </View>
   );
@@ -60,14 +83,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#ffffff',
   },
-  row: {
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
+  footerContainer: {
+    flex: 1,
     flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sliderContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 10,
+  },
+  iconButton: {
+    minWidth: 32,
+    height: 32,
   },
   slider: {
-    width: '75%',
+    flex: 1,
     height: 40,
+    marginHorizontal: 8,
   },
 });
 

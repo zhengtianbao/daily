@@ -50,16 +50,6 @@ const EpubReaderHeader = ({ title }: { title: string }) => {
           router.back();
         }}
       />
-      <Appbar.Action
-        icon="format-list-bulleted-square"
-        animated={false}
-        onPress={() => {
-          router.navigate({
-            pathname: '/bookshelf/toc',
-            params: { bookTitle: title },
-          });
-        }}
-      />
       <Appbar.Content title={title} />
       <Appbar.Action
         icon={isBookmarked ? 'bookmark' : 'bookmark-outline'}
@@ -70,16 +60,6 @@ const EpubReaderHeader = ({ title }: { title: string }) => {
         icon={({ size, color }) => <FontAwesome name="gear" size={size} color={color} />}
         animated={false}
         onPress={() => setIsSettingsVisible(true)}
-      />
-      <Appbar.Action
-        icon="format-list-bulleted-square"
-        animated={false}
-        onPress={() => {
-          router.navigate({
-            pathname: '/bookshelf/bookmarks',
-            params: { bookTitle: title },
-          });
-        }}
       />
     </Appbar.Header>
   );
