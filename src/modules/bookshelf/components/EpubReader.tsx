@@ -5,7 +5,7 @@ import { useFileSystem } from '@epubjs-react-native/expo-file-system';
 
 import { database } from '@/db/database';
 import { ReaderState, useReaderStore } from '@/modules/bookshelf/store/reader';
-import { Bookmark, Location, Reader, useReader } from '@/vendor/epubjs-react-native/src';
+import { Bookmark, Location, Reader, Theme, useReader } from '@/vendor/epubjs-react-native/src';
 
 const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string }) => {
   const setIsAppBarVisible = useReaderStore((state: ReaderState) => state.setIsAppBarVisible);
@@ -17,6 +17,7 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
   const [isBookInitialized, setIsBookInitialized] = useState(false);
   const [initialLocation, setInitialLocation] = useState<string | undefined>(undefined);
   const [initialBookmarks, setInitialBookmarks] = useState<Bookmark[] | undefined>(undefined);
+  const [initialTheme, setInitialTheme] = useState<Theme>({});
   const [readingProgress, setReadingProgress] = useState(0);
 
   const { width, height } = useWindowDimensions();
@@ -96,10 +97,6 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
     paragraph: string,
     sentence: string
   ) => {
-    console.log('word selected:', selection);
-    console.log('cfiRange:', cfiRange);
-    console.log('paragraph:', paragraph);
-    console.log('sentence:', sentence);
     if (selection.includes(' ')) {
       return;
     }
@@ -119,26 +116,23 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
       }
       const bookmarks = await database.getBookmarksByBookTitle(bookTitle);
       setInitialBookmarks(bookmarks);
+
+      const settings = await database.getBookSettingsByBookTitle(bookTitle);
+      if (settings) {
+        setInitialTheme({
+          body: {
+            background: settings.backgroundColor,
+            'font-size': settings.fontSize + 'px',
+          },
+          '* p': { 'font-family': settings.fontFamily + ' !important' },
+        });
+      }
+
       setIsBookInitialized(true);
     };
 
     initializeBook();
   }, []);
-
-  const setTheme = async () => {
-    const settings = await database.getBookSettingsByBookTitle(bookTitle);
-    if (settings) {
-      changeFontSize(settings.fontSize + 'px');
-      changeTheme({
-        ...theme,
-        body: {
-          ...theme.body,
-          background: settings.backgroundColor,
-        },
-        '* p': { 'font-family': settings.fontFamily + ' !important' },
-      });
-    }
-  };
 
   if (!isBookInitialized) {
     return <View />;
@@ -170,13 +164,6 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
               setPressAt(e.absoluteY);
             }
           }}
-          onLocationsReady={() => {
-            setTheme().then(() => {
-              if (initialLocation) {
-                goToLocation(initialLocation);
-              }
-            });
-          }}
           menuItems={[]}
           initialBookmarks={initialBookmarks}
           onAddBookmark={handleAddBookmark}
@@ -186,6 +173,9 @@ const EpubReader = ({ bookTitle, bookUri }: { bookTitle: string; bookUri: string
               goToLocation(message.cfi);
             }
           }}
+          charactersPerLocation={150}
+          initialLocation={initialLocation}
+          defaultTheme={initialTheme}
         />
       </View>
     );

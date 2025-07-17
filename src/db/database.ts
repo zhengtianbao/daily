@@ -241,7 +241,7 @@ export class Database {
       if (!result) {
         return null;
       }
-      console.log(result);
+
       return {
         id: result.id,
         bookId: result.bookId,
